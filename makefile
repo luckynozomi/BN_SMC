@@ -1,0 +1,45 @@
+#-------------------------------------
+MYOBJ = main.o node.o bn.o cpd.o data.o smc.o constraint.o edge.o 
+
+MYINCLUDE = ./include
+MYSRC = ./src/
+
+CC = g++
+MYLIBBOOST = ./lib/boost_1_53_0
+
+CFLAGS = -fopenmp -c
+
+#-------------------------------------
+
+a : $(MYOBJ)
+	$(CC) -fopenmp -pg $(MYOBJ) -o a
+
+main.o : main.cpp main.h
+	$(CC) $(CFLAGS) main.cpp -I $(MYLIBBOOST) -I$(MYINCLUDE) 
+
+node.o : $(MYINCLUDE)/node.h $(MYSRC)node.cpp
+	$(CC) $(CFLAGS) $(MYSRC)node.cpp -I$(MYLIBBOOST) -I$(MYINCLUDE)
+
+bn.o : $(MYINCLUDE)/bn.h $(MYSRC)bn.cpp
+	$(CC) $(CFLAGS) $(MYSRC)bn.cpp -I$(MYLIBBOOST) -I$(MYINCLUDE)
+
+cpd.o : $(MYINCLUDE)/cpd.h $(MYSRC)cpd.cpp
+	$(CC) $(CFLAGS) $(MYSRC)cpd.cpp -I$(MYLIBBOOST) -I$(MYINCLUDE)
+
+data.o : $(MYINCLUDE)/data.h $(MYSRC)data.cpp
+	$(CC) $(CFLAGS) $(MYSRC)data.cpp -I$(MYLIBBOOST) -I$(MYINCLUDE)
+
+#chain.o : $(MYINCLUDE)/chain.h $(MYSRC)chain.cpp
+#	$(CC) $(CFLAGS) $(MYSRC)chain.cpp -I$(MYLIBBOOST) -I$(MYINCLUDE)
+constraint.o : $(MYINCLUDE)/constraint.h $(MYSRC)constraint.cpp
+	$(CC) $(CFLAGS) $(MYSRC)constraint.cpp -I$(MYLIBBOOST) -I$(MYINCLUDE)
+
+smc.o: $(MYINCLUDE)/smc.h $(MYSRC)smc.cpp 
+	$(CC) $(CFLAGS) $(MYSRC)smc.cpp -I$(MYLIBBOOST) -I$(MYINCLUDE)
+
+edge.o: $(MYINCLUDE)/edge.h $(MYSRC)edge.cpp 
+	$(CC) $(CFLAGS) $(MYSRC)edge.cpp -I$(MYLIBBOOST) -I$(MYINCLUDE)
+
+clean: 
+	rm *.o
+
