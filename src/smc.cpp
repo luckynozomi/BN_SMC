@@ -139,10 +139,20 @@ void SMC::Summary(string outpath,int chains,int nodes)
 
     }
 
-    ofstream outFile,outFile_best,outFile_sum;
+    ofstream outFile,outFile_best,outFile_sum,outFile_scores;
     outFile.open((outpath+"_summary.txt").c_str(),fstream::app);
     outFile<<_bestBICs[max_ind]<<endl;
     outFile.close();
+    outFile_scores.open((outpath+"_scores.R").c_str());
+    outFile_scores<<"scores<-c(";
+    for(int i=0;i<chains-1;i++)
+    {
+        outFile_scores<<_bestBICs[i]<<",";
+    }
+    outFile_scores<<_bestBICs[chains-1]<<")"<<endl;
+    outFile_scores.close();
+
+
 
     outFile_best.open((outpath+"_best_edges.R").c_str());
     outFile_best<<"res.bn<-empty.graph(nam)"<<endl;
@@ -195,4 +205,9 @@ int SMC::_MaximumIndSearch(vector<double>& target)
         }
     }
     return index;
+}
+
+bool SMC::_MyGreatThan(double a, double b)
+{
+    return a>b;
 }

@@ -44,8 +44,8 @@ public:
     void Update(DATA&,int,int,int,double,int);
     void DFSummary(string,int);
     void Summary(string,int,int);
-
-
+    void AverageResults(string,int,int,);
+//int: how many top scored BNs should be considered.
 
 //protected:
 private:
@@ -57,6 +57,7 @@ private:
     vector< vector <int> > _edgeMatrixOptimal;
 
     int _MaximumIndSearch(vector<double>&);
+    bool _MyGreatThan(double,double);
 
 };
 
