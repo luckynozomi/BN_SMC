@@ -1,5 +1,5 @@
 #-------------------------------------
-MYOBJ = main.o node.o bn.o cpd.o data.o smc.o constraint.o edge.o 
+MYOBJ = main.o node.o bn.o cpd.o data.o smc.o constraint.o edge.o statistics.o
 
 MYINCLUDE = ./include
 MYSRC = ./src/
@@ -39,6 +39,9 @@ smc.o: $(MYINCLUDE)/smc.h $(MYSRC)smc.cpp
 
 edge.o: $(MYINCLUDE)/edge.h $(MYSRC)edge.cpp 
 	$(CC) $(CFLAGS) $(MYSRC)edge.cpp -I$(MYLIBBOOST) -I$(MYINCLUDE)
+
+statistics.o: $(MYINCLUDE)/statistics.h $(MYSRC)statistics.cpp 
+	$(CC) $(CFLAGS) $(MYSRC)statistics.cpp -I$(MYLIBBOOST) -I$(MYINCLUDE)
 
 clean: 
 	rm *.o

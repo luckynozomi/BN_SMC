@@ -15,14 +15,16 @@ SMC::SMC(int nodes,int chains)
     _bestBNs = helper;
     _bestBICs.reserve(chains);
 
-    _optimalId = 0;
+    _averageCount = 0;
     _edgeMatrixSum.reserve(nodes);
     _edgeMatrixOptimal.reserve(nodes);
+    _edgeMatrixAverage.reserve(nodes);
     vector<int> thehelper(nodes);
     for(int i =0; i<nodes;i++)
     {
         _edgeMatrixOptimal.push_back(thehelper);
         _edgeMatrixSum.push_back(thehelper);
+        _edgeMatrixAverage.push_back(thehelper);
 
     }
 }
@@ -130,6 +132,7 @@ void SMC::DFSummary(string outpath,int numberNodes)
 void SMC::Summary(string outpath,int chains,int nodes)
 {
     int max_ind = _MaximumIndSearch(_bestBICs);
+    // compute the egdes ever sampled
     for(int i=0;i<chains;i++)
     {
         for(unsigned j=0;j<_bestBNs[i].Get_edges().size();j++)
@@ -138,6 +141,22 @@ void SMC::Summary(string outpath,int chains,int nodes)
         }
 
     }
+    //compute the edsges sampled for the network with a BIC score inside first standard deviation.
+    Statistics sta;
+    sta.Summary(_bestBICs);
+    double _cutOffBic = _bestBICs[max_ind]-sta.Get_std();
+    for(int i=0;i<chains;i++)
+    {
+        if(_bestBICs[i]>=_cutOffBic)
+        {
+            _averageCount++;
+            for(unsigned j=0;j<_bestBNs[i].Get_edges().size();j++)
+            {
+                _edgeMatrixAverage[_bestBNs[i].Get_anEdge(j).Get_dLink().first][_bestBNs[i].Get_anEdge(j).Get_dLink().second]++;
+            }
+        }
+    }
+
 
     ofstream outFile,outFile_best,outFile_sum,outFile_scores;
     outFile.open((outpath+"_summary.txt").c_str(),fstream::app);
@@ -151,6 +170,7 @@ void SMC::Summary(string outpath,int chains,int nodes)
     }
     outFile_scores<<_bestBICs[chains-1]<<")"<<endl;
     outFile_scores.close();
+
 
 
 

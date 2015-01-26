@@ -8,6 +8,7 @@
 #include <omp.h>
 #include "bn.h"
 #include "data.h"
+#include "statistics.h"
 #include <string.h>
 class SMC
 {
@@ -44,16 +45,16 @@ public:
     void Update(DATA&,int,int,int,double,int);
     void DFSummary(string,int);
     void Summary(string,int,int);
-    void AverageResults(string,int,int,);
-//int: how many top scored BNs should be considered.
 
 //protected:
 private:
     BN _initBN;
     vector<BN> _bestBNs;
     vector<double> _bestBICs;
-    int _optimalId;
+    int _averageCount;
+
     vector< vector <int> > _edgeMatrixSum;//diagnositic using
+    vector< vector <int> > _edgeMatrixAverage;//diagnositic using
     vector< vector <int> > _edgeMatrixOptimal;
 
     int _MaximumIndSearch(vector<double>&);
