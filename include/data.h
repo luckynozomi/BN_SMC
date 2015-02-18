@@ -76,7 +76,7 @@ public:
 private:
     int _NumberOfObservations;//should be set during initialization
     int _NumberOfNodes; // also should be set during initialization
-    vector<vector<int > > _data; // vector that stores the data for further use.
+    vector < vector < int > > _data; // vector that stores the data for further use.
     vector<int> _param;//Numbers of parameters for each node.
 //    vector < vector< int > > _skeleton;
 

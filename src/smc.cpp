@@ -157,10 +157,11 @@ void SMC::Summary(string outpath,int chains,int nodes)
         }
     }
 
-
-    ofstream outFile,outFile_best,outFile_sum,outFile_scores;
+//outputs
+    ofstream outFile,outFile_best,outFile_sum,outFile_scores,outFile_average;
     outFile.open((outpath+"_summary.txt").c_str(),fstream::app);
     outFile<<_bestBICs[max_ind]<<endl;
+    outFile<<_averageCount<<endl;
     outFile.close();
     outFile_scores.open((outpath+"_scores.R").c_str());
     outFile_scores<<"scores<-c(";
@@ -186,7 +187,7 @@ void SMC::Summary(string outpath,int chains,int nodes)
 
     outFile_sum.open((outpath+"_sum_edges.txt").c_str());
 
-    outFile_sum<<"From, To, Count;"<<endl;
+    outFile_sum<<"From, To, Count"<<endl;
     for(int i = 0;i<nodes;i++)
     {
         for(int j = 0;j<nodes;j++)
@@ -199,6 +200,21 @@ void SMC::Summary(string outpath,int chains,int nodes)
 
     }
     outFile_sum.close();
+
+    outFile_average.open((outpath+"_average_edges.txt").c_str());
+    outFile_average<<"From, To, Count"<<endl;
+    for(int i = 0;i<nodes;i++)
+    {
+        for(int j = 0;j<nodes;j++)
+        {
+            if(_edgeMatrixAverage[i][j]>0)
+            {
+                outFile_average<<i+1<<","<<j+1<<","<< static_cast<double>(_edgeMatrixAverage[i][j])/_averageCount <<endl;
+            }
+        }
+
+    }
+    outFile_average.close();
 
 }
 

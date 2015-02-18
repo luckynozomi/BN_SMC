@@ -920,8 +920,15 @@ void BN::_SelectDirection(int NodeA, int NodeB, DATA& data,double temper)
         tempNode.UpdateCPD(data);
         tempNode.UpdateBIC(data.Get_NumberOfObservations());
         tempScore += tempNode.Get_scoreContribution();
-        double probSampleAtoB;
-        probSampleAtoB = exp((tempScore-_score)/(temper))/(1.0+exp((tempScore-_score)/(temper)));
+        double probSampleAtoB = 0.0;
+        if(tempScore > _score)
+        {
+            probSampleAtoB = 1.0/(temper))/(1.0+exp((_score-tempScore)/(temper)));
+        }
+        else
+        {
+            probSampleAtoB = exp((tempScore-_score)/(temper))/(1.0+exp((tempScore-_score)/(temper)));
+        }
         double aRandomNumber = static_cast<double>(rand())/RAND_MAX;
         while(aRandomNumber >= 1.0)
         {
@@ -946,7 +953,15 @@ void BN::_SelectDirection(int NodeA, int NodeB, DATA& data,double temper)
         tempNode.UpdateBIC(data.Get_NumberOfObservations());
         tempScore += tempNode.Get_scoreContribution();
         double probSampleBtoA;
-        probSampleBtoA = exp((tempScore-_score)/(temper))/(1.0+exp((tempScore-_score)/(temper)));
+        if(tempScore > _score)
+        {
+            probSampleBtoA = 1.0/(temper))/(1.0+exp((_score-tempScore)/(temper)));
+        }
+        else
+        {
+            probSampleBtoA = exp((tempScore-_score)/(temper))/(1.0+exp((tempScore-_score)/(temper)));
+        }
+
         double aRandomNumber = static_cast<double>(rand())/RAND_MAX;
         while(aRandomNumber >= 1.0)
         {
@@ -980,8 +995,23 @@ void BN::_SelectDirection(int NodeA, int NodeB, DATA& data,double temper)
         tempScoreBtoA += tempNodeBtoA.Get_scoreContribution();
         //probabilities
         double probSampleAtoB,probSampleBtoA;
-        probSampleAtoB = exp((tempScoreAtoB-_score)/(temper))/(1.0+exp((tempScoreAtoB-_score)/(temper))+exp((tempScoreBtoA-_score)/(temper)));
-        probSampleBtoA = exp((tempScoreBtoA-_score)/(temper))/(1.0+exp((tempScoreAtoB-_score)/(temper))+exp((tempScoreBtoA-_score)/(temper)));
+        if(tempScoreAtoB > tempScoreBtoA && tempScoreAtoB >_score)
+        {
+            probSampleAtoB = exp((tempScoreAtoB-_score)/(temper))/(1.0+exp((tempScoreAtoB-_score)/(temper))+exp((tempScoreBtoA-_score)/(temper)));
+            probSampleBtoA = exp((tempScoreBtoA-_score)/(temper))/(1.0+exp((tempScoreAtoB-_score)/(temper))+exp((tempScoreBtoA-_score)/(temper)));
+        }
+        else if(tempScoreAtoB < tempScoreBtoA && tempScoreAtoB >_score)
+        {
+            probSampleAtoB = exp((tempScoreAtoB-_score)/(temper))/(1.0+exp((tempScoreAtoB-_score)/(temper))+exp((tempScoreBtoA-_score)/(temper)));
+            probSampleBtoA = exp((tempScoreBtoA-_score)/(temper))/(1.0+exp((tempScoreAtoB-_score)/(temper))+exp((tempScoreBtoA-_score)/(temper)));
+        }
+        else
+        {
+            probSampleAtoB = exp((tempScoreAtoB-_score)/(temper))/(1.0+exp((tempScoreAtoB-_score)/(temper))+exp((tempScoreBtoA-_score)/(temper)));
+            probSampleBtoA = exp((tempScoreBtoA-_score)/(temper))/(1.0+exp((tempScoreAtoB-_score)/(temper))+exp((tempScoreBtoA-_score)/(temper)));
+        }
+ //       probSampleAtoB = exp((tempScoreAtoB-_score)/(temper))/(1.0+exp((tempScoreAtoB-_score)/(temper))+exp((tempScoreBtoA-_score)/(temper)));
+ //       probSampleBtoA = exp((tempScoreBtoA-_score)/(temper))/(1.0+exp((tempScoreAtoB-_score)/(temper))+exp((tempScoreBtoA-_score)/(temper)));
         //sample
         double aRandomNumber = static_cast<double>(rand())/RAND_MAX;
         while(aRandomNumber >= 1.0)
@@ -1024,6 +1054,7 @@ void BN::_TripletSelection(vector<int>& candidateNodes, DATA& data, double tempe
     vector<vector<int> > configurations;
     vector<int> tmpConfigurations(3);
     vector< vector <bool> > AddedEdge;
+    vector<bool> AddedAnyEdge;
     for(int i=0; i<3;i++)
     {
 //cout<<"original "<<candidateNodes[i]<<","<<_allNodes[candidateNodes[i]].Get_scoreContribution()<<endl;
@@ -1040,8 +1071,8 @@ void BN::_TripletSelection(vector<int>& candidateNodes, DATA& data, double tempe
         potentialBIC.reserve(27);
         probOfSampling.reserve(27);
         configurations.reserve(27);
-
         AddedEdge.reserve(27);
+        AddedAnyEdge.reserve(27);
         for(int i =0; i< 27;i++)
         {
             tmpConfigurations[0] = i%3;
@@ -1064,6 +1095,7 @@ void BN::_TripletSelection(vector<int>& candidateNodes, DATA& data, double tempe
         configurations.reserve(9);
        // tmpConfigurations.reserve(2);
         AddedEdge.reserve(9);
+        AddedAnyEdge.reserve(9);
         for(int i =0; i< 9;i++)
         {
             tmpConfigurations[0] = i%3;
@@ -1075,9 +1107,10 @@ void BN::_TripletSelection(vector<int>& candidateNodes, DATA& data, double tempe
             AddedEdge.push_back(tmpAddedEdge);
         }
     }
-    probOfSampling[0] = 1.0;//exp(0)
+//    probOfSampling[0] = 1.0;//exp(0)
     potentialBIC[0] = originalBIC;
-    TotalProb += probOfSampling[0];
+    AddedAnyEdge.push_back(true);// for the original configuration.
+//    TotalProb += probOfSampling[0];
     for(int i =1 ; i< pow(3,MaxInd);i++)
     {
         for(int j=0;j<MaxInd;j++)
@@ -1143,8 +1176,8 @@ void BN::_TripletSelection(vector<int>& candidateNodes, DATA& data, double tempe
             }
 //cout<<"add or not:"<<AddedEdge[i][0]<<","<<AddedEdge[i][1]<<","<<AddedEdge[i][2]<<endl;
         }
-
-        if( (AddedEdge[i][0])&&(AddedEdge[i][1])&&(AddedEdge[i][2]) ) // If any edge added to current configuration then update all the candidate Nodes.
+        AddedAnyEdge.push_back( (AddedEdge[i][0])||(AddedEdge[i][1])||(AddedEdge[i][2]) );
+        if(AddedAnyEdge[i]) // If any edge added to current configuration then update all the candidate Nodes.
         {
             for(int j=0;j<3;j++)
             {
@@ -1155,7 +1188,28 @@ void BN::_TripletSelection(vector<int>& candidateNodes, DATA& data, double tempe
 
             }
 //cout<<"pBIC: "<<i<<"th "<<potentialBIC[i]<<endl;
-            probOfSampling[i] += exp( (potentialBIC[i]-originalBIC)/temper );
+//            probOfSampling[i] += exp( (potentialBIC[i]-originalBIC)/temper );
+        }
+        else
+        {
+//            probOfSampling[i] = 0.0;
+        }
+//        TotalProb += probOfSampling[i];
+    }
+//find the largest bic.
+    double MaxBIC = potentialBIC[0]
+    for(int i=1; i<pow(3,MaxInd);i++)
+    {
+        if(potentialBIC[i]>MaxBIC)
+        {
+            MaxBIC = potentialBIC[i];
+        }
+    }
+    for(int i=0; i<pow(3,MaxInd);i++)
+    {
+        if(AddedAnyEdge[i])
+        {
+            probOfSampling[i] = exp( (potentialBIC[i]-MaxBIC)/temper );
         }
         else
         {

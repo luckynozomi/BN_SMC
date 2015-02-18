@@ -46,9 +46,9 @@ class Statistics
             return(_std);
         }
     private:
-        _mean = 0.0;
-        _variance = 0.0;
-        _std = 0.0;
+        double _mean;
+        double _variance;
+        double _std;
 };
 
 #endif // STATISTICS_H
