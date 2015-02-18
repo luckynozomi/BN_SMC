@@ -923,7 +923,7 @@ void BN::_SelectDirection(int NodeA, int NodeB, DATA& data,double temper)
         double probSampleAtoB = 0.0;
         if(tempScore > _score)
         {
-            probSampleAtoB = 1.0/(temper))/(1.0+exp((_score-tempScore)/(temper)));
+            probSampleAtoB = 1.0/(1.0+exp((_score-tempScore)/(temper)));
         }
         else
         {
@@ -955,7 +955,7 @@ void BN::_SelectDirection(int NodeA, int NodeB, DATA& data,double temper)
         double probSampleBtoA;
         if(tempScore > _score)
         {
-            probSampleBtoA = 1.0/(temper))/(1.0+exp((_score-tempScore)/(temper)));
+            probSampleBtoA = 1.0/(1.0+exp((_score-tempScore)/(temper)));
         }
         else
         {
@@ -1197,7 +1197,7 @@ void BN::_TripletSelection(vector<int>& candidateNodes, DATA& data, double tempe
 //        TotalProb += probOfSampling[i];
     }
 //find the largest bic.
-    double MaxBIC = potentialBIC[0]
+    double MaxBIC = potentialBIC[0];
     for(int i=1; i<pow(3,MaxInd);i++)
     {
         if(potentialBIC[i]>MaxBIC)
