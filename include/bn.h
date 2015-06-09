@@ -129,7 +129,7 @@ public:
     // Update: smc updating
     // @DATA&: the data object
     // @double: temperature
-    void HC(DATA&,int);
+    void HC(DATA&);
     // HC: hill climbing to ensure reaching the local optimal
     // @DATA&: data object
    // void Del_arc(int,int);
@@ -160,6 +160,8 @@ private:
     void _TripletSelection(vector<int>&,DATA&,double,bool);
     int _IndexSearch(int);
     bool _ExistArc(int,int);
+    vector<bool> _changedAcc;
+   // vector<int> _changedNode;
  //   void _RecombAncester(int);
  //   void _RecombDescedant(int);
 };

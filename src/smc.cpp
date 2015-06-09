@@ -63,6 +63,7 @@ void SMC::Update(DATA& data, int numberOfIter, int numberOfChains,int NofCores, 
 //        cout<<i<<"th chain,score contribution for node 20: "<<runBN.Get_aNode(19).Get_scoreContribution()<<endl;
 //        cout<<i<<"th chain,# of edges: "<<runBN.Get_edges().size()<<endl;
         int k = 0;
+        //int k=numberOfIter-1;
 //cout<<"i "<<i<<endl;
 
         while( (k < numberOfIter) && (runBN.Get_growing()) )
@@ -83,8 +84,24 @@ void SMC::Update(DATA& data, int numberOfIter, int numberOfChains,int NofCores, 
   //      cout<<"-------------------------------------"<<endl;
         }
 
-        _bestBNs[i].HC(data,depth);
-        _bestBICs[i] = _bestBNs[i].Get_score();
+    }
+    int round = 0;
+    _bicScores.reserve(depth+1);
+    _bicScores.push_back(_bestBICs);
+    while(round < depth)
+    {
+        round++;
+
+        #pragma omp parallel for
+        for(int i = 0; i<numberOfChains;i++)
+        {
+            _bestBNs[i].HC(data);
+            _bestBICs[i] = _bestBNs[i].Get_score();
+        }
+        _bicScores.push_back(_bestBICs);
+  //      int max_ind = _MaximumIndSearch(_bestBICs);
+ //debug using only
+ //       _maxBicsRound.push_back(_bestBICs[max_ind]);
     }
 }
 
@@ -100,7 +117,7 @@ void SMC::Update(DATA& data, int numberOfIter, int numberOfChains,int NofCores, 
 void SMC::DFSummary(string outpath,int numberNodes)
 {
     ofstream DFresult;
-    DFresult.open((outpath+"_DFsummary.R").c_str(),fstream::app);
+    DFresult.open((outpath+"_DFsummary.R").c_str());//,fstream::app);
     DFresult<<"DFcon<-list(NULL)"<<endl;
     for(int i=0; i<numberNodes;i++)
     {
@@ -129,7 +146,7 @@ void SMC::DFSummary(string outpath,int numberNodes)
 
 
 
-void SMC::Summary(string outpath,int chains,int nodes)
+void SMC::Summary(string outpath,int chains,int nodes,int depth)
 {
     int max_ind = _MaximumIndSearch(_bestBICs);
     // compute the egdes ever sampled
@@ -162,14 +179,24 @@ void SMC::Summary(string outpath,int chains,int nodes)
     outFile.open((outpath+"_summary.txt").c_str(),fstream::app);
     outFile<<_bestBICs[max_ind]<<endl;
     outFile<<_averageCount<<endl;
-    outFile.close();
-    outFile_scores.open((outpath+"_scores.R").c_str());
-    outFile_scores<<"scores<-c(";
-    for(int i=0;i<chains-1;i++)
+    for(int i=0;i<_maxBicsRound.size();i++)
     {
-        outFile_scores<<_bestBICs[i]<<",";
+        outFile<<_maxBicsRound[i]<<",";
     }
-    outFile_scores<<_bestBICs[chains-1]<<")"<<endl;
+    outFile<<endl;
+    outFile.close();
+
+    outFile_scores.open((outpath+"_scores.R").c_str());
+    outFile_scores<<"scores<-NULL"<<endl;
+    for(int j=0;j<=depth;j++)
+    {
+        outFile_scores<<"scores[["<< (j+1) <<"]]<-c(";
+        for(int i=0;i<chains-1;i++)
+        {
+            outFile_scores<<_bicScores[j][i] <<",";
+        }
+        outFile_scores<<_bicScores[j][chains-1]<<")"<<endl;
+    }
     outFile_scores.close();
 
 

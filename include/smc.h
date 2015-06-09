@@ -44,7 +44,7 @@ public:
     void Initialize(DATA&, double,int);
     void Update(DATA&,int,int,int,double,int);
     void DFSummary(string,int);
-    void Summary(string,int,int);
+    void Summary(string,int,int,int);
 
 //protected:
 private:
@@ -52,7 +52,8 @@ private:
     vector<BN> _bestBNs;
     vector<double> _bestBICs;
     int _averageCount;
-
+    vector<double> _maxBicsRound;
+    vector< vector < double > > _bicScores;
     vector< vector <int> > _edgeMatrixSum;//diagnositic using
     vector< vector <int> > _edgeMatrixAverage;//diagnositic using
     vector< vector <int> > _edgeMatrixOptimal;

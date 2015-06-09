@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
     outFile<< "Time elasped is "<< difftime(procEnd,procStart)<<endl;
     outFile.close();
 
-    smc1.Summary(OUTPUT_FILE,NUMBER_OF_CHAIN,NODES);
+    smc1.Summary(OUTPUT_FILE,NUMBER_OF_CHAIN,NODES,DEPTH);
 
 
     return 0;

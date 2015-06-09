@@ -26,7 +26,8 @@ void BN::Initial(DATA& data, double cutoff)
 
     _growing = true;
     _oneNeb = false;
-
+    _changedAcc.reserve(data.Get_NumberOfNodes());
+    //_changedNode.reserve(data.Get_NumberOfNodes());
     for(int i = 0 ; i<data.Get_NumberOfNodes();i++)
     {
         NODE helpNode;
@@ -50,6 +51,8 @@ void BN::Initial(DATA& data, double cutoff)
         _allNodes.push_back(helpNode);
 
         _score += helpNode.Get_scoreContribution();
+        _changedAcc.push_back(true);
+        //_changedNode.push_back(0);
         /*cout<<"node: "<<i<<":";
         for(int j=0;j<helpNode.Get_correspondingConstraint().Get_dependentNode().size();j++)
         {
@@ -495,7 +498,7 @@ void BN::Update(DATA& data,double temper)
 
 
 
-void BN::HC(DATA& data,int depth)
+void BN::HC(DATA& data)
 {
 //first generate a sequence of updating order, algorithm: Knuth shuffles
     vector<int> sequence;
@@ -516,244 +519,46 @@ void BN::HC(DATA& data,int depth)
 //	int revcounter = 0 ;
 //	int delcounter = 0 ;
 //------------------------------------------------------------------------//
-    int calibrate = 0;
-    vector<bool> changedAcc;
-    vector<int> changedNode;
-    changedAcc.reserve(No_nodes);
-    changedNode.reserve(No_nodes);
-    for(int i=0;i<No_nodes;i++)
-    {
-        changedAcc.push_back(true);
-        changedNode.push_back(0);
-    }
-    int round=0;
 
-    if(depth>0)
+    for(int i=0; i<No_nodes;i++)
     {
-
-        while(calibrate == 0 && round < depth )
+        if(_changedAcc[i])
         {
-            round++;
-            calibrate = 1;
-            for(int i=0; i<No_nodes;i++)
+            for(int j=0;j<No_nodes;j++) //sequence
             {
-
-                if(changedAcc[i])
+                if(i!= sequence[j])
                 {
-                    for(int j=0;j<No_nodes;j++) //sequence
+                    if(!(_ExistArc(sequence[j],i)) && !(_ExistArc(i,sequence[j])) )//no arc
                     {
-
-                        if(i!= sequence[j])
+                        if(_IsDAG(sequence[j],i))
                         {
-
-
-                            if(!(_ExistArc(sequence[j],i)) && !(_ExistArc(i,sequence[j])) )//no arc
+                            NODE tmpNode = _allNodes[i];
+                            tmpNode.UpdateParent(sequence[j]);
+                            tmpNode.UpdateCPD(data);
+                            tmpNode.UpdateBIC(data.Get_NumberOfObservations());
+                            if(tmpNode.Get_scoreContribution()>_allNodes[i].Get_scoreContribution())
                             {
-
-                                if(_IsDAG(sequence[j],i))
-                                {
-
-                                    NODE tmpNode = _allNodes[i];
-                                    tmpNode.UpdateParent(sequence[j]);
-                                    tmpNode.UpdateCPD(data);
-                                    tmpNode.UpdateBIC(data.Get_NumberOfObservations());
-                                    if(tmpNode.Get_scoreContribution()>_allNodes[i].Get_scoreContribution())
-                                    {
-                                        _score -= _allNodes[i].Get_scoreContribution();
-                                        _allNodes[i] = tmpNode;
-                                        Set_arc(sequence[j],i,false);
-                                        _score += tmpNode.Get_scoreContribution();
-                                        calibrate*=0;
-                                        changedNode[i]++;
-                                    }
-
-                                }
-
+                                _score -= _allNodes[i].Get_scoreContribution();
+                                _allNodes[i] = tmpNode;
+                                Set_arc(sequence[j],i,false);
+                                _score += tmpNode.Get_scoreContribution();
                             }
-                           /* else if(_ExistArc(sequence[j],i))
-                            {
-                                double scoreDifDel = 0.0, scoreDifRev = 0.0;
-                                // this part calculates the score change after deleting
-                                NODE delNode = _allNodes[i];
-                                delNode.RemoveParent(sequence[j]);
-                                delNode.UpdateCPD(data);
-                                delNode.UpdateBIC(data.Get_NumberOfObservations());
-                                scoreDifDel = delNode.Get_scoreContribution()-_allNodes[i].Get_scoreContribution();
-
-                                // this part calculates the score change after reversing
-                                NODE fromNode =_allNodes[sequence[j]] ,toNode=_allNodes[i];
-                                fromNode.UpdateParent(i);
-                                toNode.RemoveParent(sequence[j]);
-                                fromNode.UpdateCPD(data);
-                                toNode.UpdateCPD(data);
-                                fromNode.UpdateBIC(data.Get_NumberOfObservations());
-                                toNode.UpdateBIC(data.Get_NumberOfObservations());
-                                scoreDifRev = fromNode.Get_scoreContribution()+toNode.Get_scoreContribution()-_allNodes[i].Get_scoreContribution()-_allNodes[sequence[j]].Get_scoreContribution();
-
-                                if(scoreDifRev>0 && scoreDifRev>scoreDifDel)
-                                {
-                                    if(Rev_arc(sequence[j],i))
-                                    {
-                                        _allNodes[i].Set_correspondingCPD(toNode.Get_correspondingCPD());
-                                        _allNodes[i].Set_scoreContribution(toNode.Get_scoreContribution());
-                                        _allNodes[sequence[j]].Set_correspondingCPD(fromNode.Get_correspondingCPD());
-                                        _allNodes[sequence[j]].Set_scoreContribution(fromNode.Get_scoreContribution());
-                                        calibrate*=0;
-                                        changedNode[i]++;
-
-
-                                    }
-                                }
-                                else if( scoreDifDel>0 && scoreDifDel>scoreDifRev)
-                                {
-                                    Del_arc(sequence[j],i);
-                                    _allNodes[i].Set_correspondingCPD(delNode.Get_correspondingCPD());
-                                    _allNodes[i].Set_scoreContribution(delNode.Get_scoreContribution());
-                                    calibrate*=0;
-                                    changedNode[i]++;
-
-                                }
-
-
-                            }*/
                             else
                             {
-                                continue;
+                                _changedAcc[i] = false;
                             }
-
                         }
-                        else
-                        {
-                            continue;
-                        }
-
-                    }
-
-                    if(changedNode[i]==0)
-                    {
-                        changedAcc[i] = false;
-                        changedNode[i] = 0 ;
-                    }
-                    else
-                    {
-                        changedAcc[i] = true;
-                        changedNode[i] = 0;
                     }
                 }
             }
         }
     }
-    else if(depth == -1 )
-    {
-        while(calibrate == 0)
-        {
-            calibrate = 1;
-            for(int i=0; i<No_nodes;i++)
-            {
-                if(changedAcc[i])
-                {
-                    for(int j=0;j<No_nodes;j++) //sequence
-                    {
-                        if(i!= sequence[j])
-                        {
-                            if(!(_ExistArc(sequence[j],i)) && !(_ExistArc(i,sequence[j])) )//no arc
-                            {
-                                if(_IsDAG(sequence[j],i))
-                                {
-                                    NODE tmpNode = _allNodes[i];
-                                    tmpNode.UpdateParent(sequence[j]);
-                                    tmpNode.UpdateCPD(data);
-                                    tmpNode.UpdateBIC(data.Get_NumberOfObservations());
-                                    if(tmpNode.Get_scoreContribution()>_allNodes[i].Get_scoreContribution())
-                                    {
-                                        _score -= _allNodes[i].Get_scoreContribution();
-                                        _allNodes[i] = tmpNode;
-                                        Set_arc(sequence[j],i,false);
-                                        _score += tmpNode.Get_scoreContribution();
-                                        calibrate*=0;
-                                        changedNode[i]++;
+}
 
-                                    }
-
-                                }
-
-                            }
-                           /* else if(_ExistArc(sequence[j],i))
-                            {
-                                double scoreDifDel = 0.0, scoreDifRev = 0.0;
-                                // this part calculates the score change after deleting
-                                NODE delNode = _allNodes[i];
-                                delNode.RemoveParent(sequence[j]);
-                                delNode.UpdateCPD(data);
-                                delNode.UpdateBIC(data.Get_NumberOfObservations());
-                                scoreDifDel = delNode.Get_scoreContribution()-_allNodes[i].Get_scoreContribution();
-
-                                // this part calculates the score change after reversing
-                                NODE fromNode =_allNodes[sequence[j]] ,toNode=_allNodes[i];
-                                fromNode.UpdateParent(i);
-                                toNode.RemoveParent(sequence[j]);
-                                fromNode.UpdateCPD(data);
-                                toNode.UpdateCPD(data);
-                                fromNode.UpdateBIC(data.Get_NumberOfObservations());
-                                toNode.UpdateBIC(data.Get_NumberOfObservations());
-                                scoreDifRev = fromNode.Get_scoreContribution()+toNode.Get_scoreContribution()-_allNodes[i].Get_scoreContribution()-_allNodes[sequence[j]].Get_scoreContribution();
-
-                                if(scoreDifRev>0 && scoreDifRev>scoreDifDel)
-                                {
-                                    if(Rev_arc(sequence[j],i))
-                                    {
-                                        _allNodes[i].Set_correspondingCPD(toNode.Get_correspondingCPD());
-                                        _allNodes[i].Set_scoreContribution(toNode.Get_scoreContribution());
-                                        _allNodes[sequence[j]].Set_correspondingCPD(fromNode.Get_correspondingCPD());
-                                        _allNodes[sequence[j]].Set_scoreContribution(fromNode.Get_scoreContribution());
-                                        calibrate*=0;
-                                        changedNode[i]++;
-                                        revcounter++;
-                                    }
-                                }
-                                else if( scoreDifDel>0 && scoreDifDel>scoreDifRev)
-                                {
-                                    Del_arc(sequence[j],i);
-                                    _allNodes[i].Set_correspondingCPD(delNode.Get_correspondingCPD());
-                                    _allNodes[i].Set_scoreContribution(delNode.Get_scoreContribution());
-                                    calibrate*=0;
-                                    changedNode[i]++;
-                                    delcounter++;
-                                }
-
-
-                            }*/
-                            else
-                            {
-                                continue;
-                            }
-
-                        }
-                        else
-                        {
-                            continue;
-                        }
-
-                    }
-
-                    if(changedNode[i]==0)
-                    {
-                        changedAcc[i] = false;
-                        changedNode[i] = 0 ;
-                    }
-                    else
-                    {
-                        changedAcc[i] = true;
-                        changedNode[i] = 0;
-                    }
-                }
-            }
-        }
-    }
 
 //cout<<"revcount: "<<revcounter<<", delcount: "<<delcounter<<endl;
 
-}
+
             /*
             for(int j=0;j<No_nodes;j++) //sequence
             {
