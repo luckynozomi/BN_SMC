@@ -7,12 +7,12 @@ MYSRC = ./src/
 CC = g++
 MYLIBBOOST = ./lib/boost_1_53_0
 
-CFLAGS = -fopenmp -c
+CFLAGS = -fopenmp -c --std=c++11
 
 #-------------------------------------
 
 a : $(MYOBJ)
-	$(CC) -fopenmp -pg $(MYOBJ) -o a
+	$(CC) -fopenmp $(MYOBJ) -o a
 
 main.o : main.cpp main.h
 	$(CC) $(CFLAGS) main.cpp -I $(MYLIBBOOST) -I$(MYINCLUDE) 
