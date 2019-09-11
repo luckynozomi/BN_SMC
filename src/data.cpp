@@ -52,15 +52,12 @@ void DATA::ReadData(const char* fileName)
 
             }
             _data.push_back(val);
-
-
         }
-
-
     }
     inFile.close();
-
 }
+
+
 void DATA::ReadParam(const char* fileName)
 {
     ifstream inFile;
@@ -81,43 +78,4 @@ void DATA::ReadParam(const char* fileName)
         }
     }
     inFile.close();
-
 }
-/*
-void DATA::ReadSkeleton(const char* fileName)
-{
-    ifstream inFile;
-    inFile.open(fileName);
-    typedef boost::tokenizer< boost::char_separator< char > > Tokenizer;
-    boost::char_separator< char > sep(",");
-    string line;
-
-    if(inFile.fail())
-    {
-        cerr << "Error Opening data File" << endl;
-        exit(1);
-    }
-    else
-    {
-
-        while( getline(inFile, line ))
-        {
-
-            Tokenizer info(line, sep);
-            vector <int> val(2);
-            int tempInd = 0;
-            for (Tokenizer::iterator it = info.begin(); it != info.end(); ++it)
-            {
-                val[tempInd++] = strtod(it->c_str(),0)-1;
-
-            }
-            _skeleton.push_back(val);
-
-
-        }
-
-
-    }
-    inFile.close();
-
-}*/

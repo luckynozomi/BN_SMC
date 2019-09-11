@@ -69,7 +69,6 @@ void CPD::UpdateCPD(const vector<int>& parent, DATA& data)
 {
 
     //Since BIC is locally consistant, so at each iteration we could update only the "toNode"
-    //vector<int> temp_par=targetNode.Get_parent();// retrive the parent information.
     int temp_size=parent.size(); // number of parents
     int numberOfParaEach[temp_size+1];// the array restores the number of categories for each parent and the "toNode"
 
@@ -78,10 +77,9 @@ void CPD::UpdateCPD(const vector<int>& parent, DATA& data)
     {
         numberOfParaEach[i]=data.Get_param(parent[i]);
     }
+
     // this part is used to give the last entry of the array, which is the number of category
-    //_numberOfParameter = numberOfParam;
     numberOfParaEach[temp_size]=_numberOfParameter;
-    // c1,c2,c3,...,c_n,T
 
     // This chuck of code is used to generate the array that used to index each observation and the number of parent configurates, as well as the total configurations.
     int temp_param[temp_size+2];
@@ -91,71 +89,49 @@ void CPD::UpdateCPD(const vector<int>& parent, DATA& data)
 
     _numberOfParentConfigure = param[0]/_numberOfParameter;
     _totalParam = param[0];
+
     // this part is used to count the occurences of each incident
-    //vector<int> temp_conditionCount;
-    //vector<double> temp_probability;
     _conditionCount.clear();
     _probability.clear();
     _conditionCount.reserve(_totalParam);
     _probability.reserve(_totalParam);
+
     // fill out the _conditionCount
-    for(int i=0; i<_totalParam; i++)//initialize, param[0] saves the total number of configurations.
+    for(int i=0; i<_totalParam; i++) // initialize, param[0] saves the total number of configurations.
     {
         _probability.push_back(1.0e-14);// avoid 0 probability which may cause the BIC gets to 0.
         _conditionCount.push_back(0);
     }
 
-    //_conditionCount=temp_conditionCount;
-    //_probability = temp_probability;
-
-    //temp_par.push_back( targetNode.Get_nodeID() );// in addition to the parent IDs, add the "toNode" id so we could get the corresponding columns of the data.
-    //int data_obs=data.Get_NumberOfObservations();// number of observations.
-    //vector< vector <int> > temp_data;
-    //temp_data=data.Get_data();// store data for counting use.
-
     for(int i=0; i< data.Get_NumberOfObservations(); i++)
     {
         vector<int> searchTarget(temp_size+1);
+        
         // create the searching target which is one observation(incident) of the local strucutre.
         for(int j=0; j< temp_size; j++)
         {
-            //searchTarget.push_back(temp_data[i][ temp_par[j] ]);
+            // searchTarget.push_back(temp_data[i][ temp_par[j] ]);
             searchTarget[j] = data.Get_data(i, parent[j]);
         }
         searchTarget[temp_size] = data.Get_data(i, _correspondingNode);
-        //int index;
-        //index = _IndexSearchTarget(searchTarget,param);// index the target
-        _conditionCount[ _IndexSearchTarget(searchTarget,param) ]++;// set the count to be one more.
+        _conditionCount[ _IndexSearchTarget(searchTarget,param) ]++; // set the count to be one more.
     }
-
-
-
-
 
     //calculate _probability
-
     int numberOfconditions=_totalParam/_numberOfParameter;
 
+    vector<int> cumsum(numberOfconditions); // normalizer
 
-    vector<int> cumsum(numberOfconditions);// normalizer
-
-/*    for(int i=0; i<numberOfconditions; i++)
-    {
-        cumsum[i]=0;
-    }
-*/
     for(int i=0; i<_totalParam; i++)
     {
-        cumsum[ ( i / (_numberOfParameter) ) ]+= _conditionCount[i];//numberOfParaEach[temp_size] is the number of categories of the "toNode"
+        cumsum[ ( i / (_numberOfParameter) ) ]+= _conditionCount[i]; // numberOfParaEach[temp_size] is the number of categories of the "toNode"
         // if there are 3 categories for the "toNode", then 0/3,1/3,2/3 will all lead to 0, and 3/3,4/3,5/3 will lead to 1.
     }
 
     for(int i=0; i<_totalParam; i++)
     {
-
         _probability[i]+= _conditionCount[i] /( (1.0e-12)+cumsum[ ( i / (_numberOfParameter) ) ]);
         // the 1.0e-12 is used to avoid 0/0.
-
     }
 
 }
@@ -168,6 +144,3 @@ void CPD::UpdateBIC(int obs)
         _BIC += _conditionCount[i]*log(_probability[i]);
     }
 }
-
-
-

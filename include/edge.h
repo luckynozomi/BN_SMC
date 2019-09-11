@@ -12,30 +12,37 @@ class EDGE
 {
 public:
     EDGE();
+
     virtual ~EDGE();
+    
     pair < int, int > Get_dLink()
     {
         return _dLink;
     }
+    
     void Set_dLink(pair < int, int > val)
     {
         _dLink = val;
     }
+    
     void Set_edge(int fromNode, int toNode)
     {
         _dLink.first = fromNode;
         _dLink.second = toNode;
     }
+    
     double Get_strenth()
     {
         return _strenth;
     }
+    
     void Set_strenth(double val)
     {
         _strenth = val;
     }
+    
     bool Matched(int,int);
-protected:
+
 private:
     pair < int, int > _dLink;
     double _strenth;

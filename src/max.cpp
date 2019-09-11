@@ -27,5 +27,4 @@ void MAX::Max(vector<double>& target)
             continue;
         }
     }
-
 }

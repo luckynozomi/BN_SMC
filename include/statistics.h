@@ -17,19 +17,22 @@ class Statistics
         	_mean = 0.0;
 			_variance = 0.0;
 			_std = 0.0;
-		// Compute the mean first
+
+		    // Compute the mean first
 			for(int i =0; i<val.size();i++)
 			{
 				_mean+=val[i];
 			}
 			_mean/= val.size();
-		// Then variance
+		    
+            // Then variance
 			for(int i = 0; i < val.size(); i++)
 			{
 				_variance += pow((val[i]-_mean),2.0);
 			}
 			_variance /= (val.size()-1);
-		// The standard deviation
+		    
+            // The standard deviation
 			_std = sqrt(_variance);
         }
 

@@ -21,18 +21,14 @@ void BN::Initial(DATA& data, double cutoff)
     _allNodes.reserve(data.Get_NumberOfNodes());
     _score = 0.0;
     _dependencies.reserve(data.Get_NumberOfNodes());
-    //cout<<data.Get_NumberOfNodes()<<endl;
     _numberOfNeighbors.reserve(data.Get_NumberOfNodes());
 
     _growing = true;
     _oneNeb = false;
     _changedAcc.reserve(data.Get_NumberOfNodes());
-    //_changedNode.reserve(data.Get_NumberOfNodes());
     for(int i = 0 ; i<data.Get_NumberOfNodes();i++)
     {
         NODE helpNode;
-       // helpNode.Set_copyall(true);
-//        helpNode.Initialize();
         helpNode.Set_nodeID(i);
         helpNode.Set_numberOfParameter(data.Get_param(i));
         helpNode.Get_correspondingCPD().Set_correspondingNode(i);
@@ -52,28 +48,10 @@ void BN::Initial(DATA& data, double cutoff)
 
         _score += helpNode.Get_scoreContribution();
         _changedAcc.push_back(true);
-        //_changedNode.push_back(0);
-        /*cout<<"node: "<<i<<":";
-        for(int j=0;j<helpNode.Get_correspondingConstraint().Get_dependentNode().size();j++)
-        {
-            cout<<helpNode.Get_correspondingConstraint().Get_dependentNode(j)<<",";
-        }
-        cout<<endl;
-        for(int j=0;j<helpNode.Get_correspondingConstraint().Get_dependentNode().size();j++)
-        {
-            cout<<"score: "<<helpNode.Get_correspondingConstraint().Get_orderedTestScore(j)<<",";
-        }
-        cout<<endl; */
     }
     for(int i = 0 ; i<data.Get_NumberOfNodes();i++)
     {
         _allNodes[i].CMIT(_allNodes,data,cutoff);
-//        cout<<"node: "<<i<<":";
-//        for(int j=0;j<_allNodes[i].Get_neighbors().size();j++)
-//        {
-//            cout<<_allNodes[i].Get_neighbors(j)<<",";
-//        }
-//        cout<<endl;
     }
     for(int i = 0 ; i<data.Get_NumberOfNodes();i++)
     {
@@ -82,16 +60,7 @@ void BN::Initial(DATA& data, double cutoff)
     for(int i = 0 ; i<data.Get_NumberOfNodes();i++)
     {
         _allNodes[i].SortNeighbor();
-        //_numberOfNeighbors[i]=_allNodes[i].Get_neighbors().size();
         _numberOfNeighbors.push_back(_allNodes[i].Get_neighbors().size());
-       // cout<<_numberOfNeighbors.size()<<endl;
-        //cout<<_numberOfNeighbors[i]<<endl;
-//        cout<<"i="<<i+1<<endl;
-//        for(int j=0; j<_numberOfNeighbors[i];j++)
-//        {
-//            cout<<_allNodes[i].Get_neighbors(j)+1<<" ";
-//        }
-//        cout<<endl;
     }
 
 }
@@ -105,6 +74,7 @@ void BN::Set_arc(int fromNode, int toNode, bool setparent)
     EDGE temp_edge;
     temp_edge.Set_edge(fromNode,toNode);
     _edges.push_back(temp_edge);
+
     // update the child/parent/ancester/descendent
     _allNodes[fromNode].UpdateChild(toNode);
     _allNodes[fromNode].UpdateDescendant(toNode,_allNodes[toNode].Get_descendant());
@@ -113,6 +83,7 @@ void BN::Set_arc(int fromNode, int toNode, bool setparent)
         _allNodes[toNode].UpdateParent(fromNode);
     }
     _allNodes[toNode].UpdateAncester(fromNode,_allNodes[fromNode].Get_ancester());
+
     // pass the ancester of the "fromNode" to the descendents of the "toNode"
     // also pass the descendents of the "toNode" to the ancester of the "fromNode"
     set<int>::iterator it;
@@ -138,12 +109,8 @@ void BN::BICscore()
 
 void BN::Update(DATA& data,double temper)
 {
-//    cout<<"tag: "<<_oneNeb<<endl;
-//    cout<<"score: "<<_score<<endl;
-
     if(!(_oneNeb))
     {
-        //cout<<1<<endl;
         vector<int> candidates;
         vector<int> triplet(3);
         triplet[0]=-1;
@@ -151,9 +118,7 @@ void BN::Update(DATA& data,double temper)
         triplet[2]=-1;
         candidates = _MinOverOne(_numberOfNeighbors);
 
-        //cout<<"overone: "<<candidates.size()<<endl;
-        //cout<<candidates.size()<<endl;
-        if(candidates.empty())// no possible v-structures
+        if(candidates.empty()) // no possible v-structures
         {
             _candOneNeb = _SearchNoneZero(_numberOfNeighbors);
             if(_candOneNeb.empty())
@@ -195,12 +160,11 @@ void BN::Update(DATA& data,double temper)
                 }
 
                 NodeB = _allNodes[NodeA].Get_neighbors(0);
-                _candOneNeb.erase(_candOneNeb.begin()+Ind);// remove node A
+                _candOneNeb.erase(_candOneNeb.begin()+Ind); // remove node A
                 _scoreOneNeb.erase(_scoreOneNeb.begin()+Ind);
-                int tmpInd = _IndexSearch(NodeB);// remove node B
+                int tmpInd = _IndexSearch(NodeB); // remove node B
                 _candOneNeb.erase(_candOneNeb.begin()+tmpInd);
                 _scoreOneNeb.erase(_scoreOneNeb.begin()+tmpInd);
-//cout<<"pair"<<endl;
                 _SelectDirection(NodeA,NodeB,data,temper);
                 _oneNeb=true;
             }
@@ -209,8 +173,6 @@ void BN::Update(DATA& data,double temper)
                 int NodeA,NodeB;
                 NodeA = _candOneNeb[0];
                 NodeB = _allNodes[NodeA].Get_neighbors(0);
-                //_allNodes[NodeA].ClearRank(0,true);
-//cout<<"pair"<<endl;
                 _SelectDirection(NodeA,NodeB,data,temper);
                 _growing = false;
             }
@@ -228,7 +190,6 @@ void BN::Update(DATA& data,double temper)
                 {
                     arandomNum = static_cast<double>( rand() ) / RAND_MAX;
                 }
-                //cout<<arandomNum<<endl;
                 triplet[1] = candidates[ min( static_cast<int>(arandomNum*candidates.size()), static_cast<int>(candidates.size())-1 ) ];
             }
 
@@ -246,7 +207,6 @@ void BN::Update(DATA& data,double temper)
 
             randomNum *= totalScore;
 
-            //cout<<randomNum<<endl;
             double cumScore = 0.0;
             int tmpSampleInde = -1;
             for(int i=0; i<_allNodes[triplet[1]].Get_neighbors().size();i++)
@@ -267,26 +227,7 @@ void BN::Update(DATA& data,double temper)
             _numberOfNeighbors[triplet[1]]--;
             _allNodes[triplet[0]].ClearRank(triplet[1],false);
             _numberOfNeighbors[triplet[0]]--;
-//cout<<"4neb: ";
-//
-//for(int i=0;i<_allNodes[4].Get_neighbors().size();i++)
-//{
-//    cout<<_allNodes[4].Get_neighbors(i)<<",";
-//}
-//cout<<endl;
-            //see if these two nodes have common neighbors, where we should first consider that cases, and this kind of case refer to complete graph, K_3
-//            for(int i=0; i<_allNodes[triplet[0]].Get_neighbors().size();i++)
- //           {
-   //             cout<<_allNodes[triplet[0]].Get_neighbors(i)<<",";
-     //       }
-       //     cout<<endl;
 
-
-         //   for(int i=0; i<_allNodes[triplet[1]].Get_neighbors().size();i++)
-          //  {
-         //       cout<<_allNodes[triplet[1]].Get_neighbors(i)<<",";
-         //   }
-//cout<<endl;
             vector<int> tmpCommonNeb(_allNodes[triplet[0]].Get_neighbors().size()+_allNodes[triplet[1]].Get_neighbors().size());
             vector<int> :: iterator it;
             it = set_intersection(_allNodes[triplet[0]].Get_neighbors().begin(),_allNodes[triplet[0]].Get_neighbors().end(),
@@ -300,10 +241,8 @@ void BN::Update(DATA& data,double temper)
                 randomNum = static_cast<double>( rand() ) / RAND_MAX;
             }
             //determine if the triplet forms a complete graph K_3
-            if(tmpCommonNeb.empty())//incomplete graph
+            if(tmpCommonNeb.empty()) //incomplete graph
             {
- //cout<<"incomp"<<endl;
-
                 double anotherTotalScore = 0.0;
                 for(int i=0; i< _allNodes[triplet[1]].Get_neighbors().size();i++)
                 {
@@ -331,13 +270,10 @@ void BN::Update(DATA& data,double temper)
                 _numberOfNeighbors[triplet[1]]--;
                 _allNodes[triplet[2]].ClearRank(triplet[1],false);
                 _numberOfNeighbors[triplet[2]]--;
-//cout<<"incomp,"<<triplet[0]<<","<<triplet[1]<<","<<triplet[2]<<endl;
-//cout<<"triple"<<endl;
                 _TripletSelection(triplet,data,temper,false);
             }
-            else//complete graph
+            else //complete graph
             {
-// cout<<"compl"<<endl;
                 triplet[2] = tmpCommonNeb[min(static_cast<int> (randomNum * tmpCommonNeb.size()), static_cast<int>(tmpCommonNeb.size())-1)];
 
                 _allNodes[triplet[0]].ClearRank(triplet[2],false);
@@ -350,32 +286,14 @@ void BN::Update(DATA& data,double temper)
 
                 _numberOfNeighbors[triplet[2]]--;
                 _allNodes[triplet[2]].ClearRank(triplet[1],false);
-//cout<<"4neb4 ";
-//
-//for(int i=0;i<_allNodes[4].Get_neighbors().size();i++)
-//{
-//    cout<<_allNodes[4].Get_neighbors(i)<<",";
-//}
-//cout<<endl;
                 _numberOfNeighbors[triplet[2]]--;
-//cout<<"triple"<<endl;
+
                 _TripletSelection(triplet,data,temper,true);
-//cout<<"comp,"<<triplet[0]<<","<<triplet[1]<<","<<triplet[2]<<endl;
-//cout<<"4nebaftertrisel: ";
-//
-//for(int i=0;i<_allNodes[4].Get_neighbors().size();i++)
-//{
-//    cout<<_allNodes[4].Get_neighbors(i)<<",";
-//}
-//cout<<endl;
             }
-
-
         }
     }
-    else// only nodes with one neighbor remain
+    else // only nodes with one neighbor remain
     {
-//cout<<"haha"<<endl;
         if(_candOneNeb.empty())
         {
             _growing = false;
@@ -419,7 +337,7 @@ void BN::Update(DATA& data,double temper)
             int tmpInd = _IndexSearch(NodeB);// remove node B
             _candOneNeb.erase(_candOneNeb.begin()+tmpInd);
             _scoreOneNeb.erase(_scoreOneNeb.begin()+tmpInd);
-//cout<<"pair"<<endl;
+
             _SelectDirection(NodeA,NodeB,data,temper);
         }
         else
@@ -427,72 +345,11 @@ void BN::Update(DATA& data,double temper)
             int NodeA,NodeB;
             NodeA = _candOneNeb[0];
             NodeB = _allNodes[NodeA].Get_neighbors(0);
-            //_allNodes[NodeA].ClearRank(0,true);
-//cout<<"pair"<<endl;
+
             _SelectDirection(NodeA,NodeB,data,temper);
             _growing = false;
         }
-
-
-
-
-
-
-
-
-
-
-/*
-
-        if(_candOneNeb.empty())
-        {
-            _growing = false;
-        }
-        else if( _candOneNeb.size()>1 )
-        {
-            int NodeA,NodeB;
-            double randomNum = static_cast<double>( rand() ) / RAND_MAX;
-            while(randomNum >= 1.0)
-            {
-                randomNum = static_cast<double>( rand() ) / RAND_MAX;
-            }
-            randomNum *= _totalScoreOneNeb;
-            double cumScore = 0.0;
-            for(int i = 0; i<_candOneNeb.size(); i++)
-            {
-                cumScore += _scoreOneNeb[i];
-                if(randomNum < cumScore)
-                {
-                    NodeA = _candOneNeb[i];
-                    NodeB = _allNodes[NodeA].Get_neighbors(0);
-                    _candOneNeb.erase(_candOneNeb.begin()+i);// remove node A
-                    _totalScoreOneNeb -= _scoreOneNeb[i];
-                    _scoreOneNeb.erase(_scoreOneNeb.begin()+i);
-                    int tmpInd = _IndexSearch(NodeB);// remove node B
-                    _candOneNeb.erase(_candOneNeb.begin()+tmpInd);
-                    _totalScoreOneNeb -= _scoreOneNeb[tmpInd];
-                    _scoreOneNeb.erase(_scoreOneNeb.begin()+tmpInd);
-                    _SelectDirection(NodeA,NodeB,data,temper);
-                    break;
-                }
-            }
-          //  _oneNeb=true;
-        }
-        else
-        {
-            int NodeA,NodeB;
-            NodeA = _candOneNeb[0];
-            NodeB = _allNodes[NodeA].Get_neighbors(0);
-            _SelectDirection(NodeA,NodeB,data,temper);
-            _growing = false;
-
-        }
-*/
-
     }
-//cout<<"-------------------------"<<endl;
-
-
 }
 
 
@@ -500,7 +357,6 @@ void BN::Update(DATA& data,double temper)
 
 void BN::HC(DATA& data)
 {
-//first generate a sequence of updating order, algorithm: Knuth shuffles
     vector<int> sequence;
     int No_nodes = data.Get_NumberOfNodes();
 	for(int i=0;i<No_nodes;i++)
@@ -513,12 +369,7 @@ void BN::HC(DATA& data)
 		int j = rand()%(i+1);
 		sequence[i]=sequence[j];
 		sequence[j]=i;
-
 	}
-
-//	int revcounter = 0 ;
-//	int delcounter = 0 ;
-//------------------------------------------------------------------------//
 
     for(int i=0; i<No_nodes;i++)
     {
@@ -528,7 +379,7 @@ void BN::HC(DATA& data)
             {
                 if(i!= sequence[j])
                 {
-                    if(!(_ExistArc(sequence[j],i)) && !(_ExistArc(i,sequence[j])) )//no arc
+                    if(!(_ExistArc(sequence[j],i)) && !(_ExistArc(i,sequence[j])) ) //no arc
                     {
                         if(_IsDAG(sequence[j],i))
                         {
@@ -556,159 +407,11 @@ void BN::HC(DATA& data)
 }
 
 
-//cout<<"revcount: "<<revcounter<<", delcount: "<<delcounter<<endl;
-
-
-            /*
-            for(int j=0;j<No_nodes;j++) //sequence
-            {
-                if(i!= sequence[j] && !(_ExistArc(i,sequence[j])))
-                {
-                    if(_IsDAG(i,sequence[j]) && !(_IsDAG(sequence[j],i))) //i-> sequence[j]
-                    {
-                       NODE tmpNode = _allNodes[sequence[j]];
-                       tmpNode.UpdateParent(i);
-                       tmpNode.UpdateCPD(data);
-                       tmpNode.UpdateBIC(data.Get_NumberOfObservations());
-                       if(tmpNode.Get_scoreContribution()>_allNodes[sequence[j]].Get_scoreContribution())
-                        {
-                            _score -= _allNodes[sequence[j]].Get_scoreContribution();
-                            _allNodes[sequence[j]] = tmpNode;
-                            Set_arc(i,sequence[j],false);
-                            _score += tmpNode.Get_scoreContribution();
-                            calibrate*=0;
-                        }
-                    }
-                    else if(!(_IsDAG(i,sequence[j])) && (_IsDAG(sequence[j],i)))// sequence[j]->i
-                    {
-                        NODE tmpNode = _allNodes[i];
-                       tmpNode.UpdateParent(sequence[j]);
-                       tmpNode.UpdateCPD(data);
-                       tmpNode.UpdateBIC(data.Get_NumberOfObservations());
-                       if(tmpNode.Get_scoreContribution()>_allNodes[i].Get_scoreContribution())
-                        {
-                            _score -= _allNodes[i].Get_scoreContribution();
-                            _allNodes[i] = tmpNode;
-                            Set_arc(sequence[j],i,false);
-                            _score += tmpNode.Get_scoreContribution();
-                            calibrate*=0;
-                        }
-                    }
-                    else if(_IsDAG(i,sequence[j]) && _IsDAG(sequence[j],i))//both
-                    {
-                        NODE tmpNodeA = _allNodes[sequence[j]];
-                       tmpNodeA.UpdateParent(i);
-                       tmpNodeA.UpdateCPD(data);
-                       tmpNodeA.UpdateBIC(data.Get_NumberOfObservations());
-
-                       NODE tmpNodeB = _allNodes[i];
-                       tmpNodeB.UpdateParent(sequence[j]);
-                       tmpNodeB.UpdateCPD(data);
-                       tmpNodeB.UpdateBIC(data.Get_NumberOfObservations());
-
-                       if(tmpNodeA.Get_scoreContribution()>_allNodes[sequence[j]].Get_scoreContribution() || tmpNodeB.Get_scoreContribution()>_allNodes[i].Get_scoreContribution() )
-                        {
-                            if(tmpNodeA.Get_scoreContribution()>tmpNodeB.Get_scoreContribution())
-                            {
-                                _score -= _allNodes[sequence[j]].Get_scoreContribution();
-                                _allNodes[sequence[j]] = tmpNodeA;
-                                Set_arc(i,sequence[j],false);
-                                _score += tmpNodeA.Get_scoreContribution();
-                                calibrate*=0;
-                            }
-                            else
-                            {
-                                _score -= _allNodes[i].Get_scoreContribution();
-                                _allNodes[i] = tmpNodeB;
-                                Set_arc(sequence[j],i,false);
-                                _score += tmpNodeB.Get_scoreContribution();
-                                calibrate*=0;
-                            }
-
-                        }
-
-
-                    }
-                    else
-                    {
-                        //dummy
-                    }
-                }
-                else
-                {
-                    continue;
-                }
-            }
-
-
-        }
-*/
-
-
-/*void BN::Del_arc(int fromNode,int toNode)
-{
-    if(_ExistArc(fromNode,toNode))
-    {
-        _allNodes[fromNode].RemoveChild(toNode);
-        _allNodes[toNode].RemoveParent(fromNode);
-        _RecombAncester(toNode);
-        _RecombDescedant(fromNode);
-        for(int i =0;i<_edges.size();i++)
-        {
-            if(_edges[i].Matched(fromNode,toNode))
-            {
-                _edges.erase(_edges.begin()+i);
-
-            }
-        }
-    }
-
-
-}
-*/
-
-/*bool BN::Rev_arc(int fromNode,int toNode)// this from and to are the present edge
-{
-    Del_arc(fromNode,toNode);
-    if(_IsDAG(toNode,fromNode))
-    {
-        Set_arc(toNode,fromNode,true);
-        return true;
-    }
-    else
-    {
-        Set_arc(fromNode,toNode,true);
-        return false;
-    }
-
-
-}
-*/
-
-
-
-
-
-
-
 void BN::_SelectDirection(int NodeA, int NodeB, DATA& data,double temper)
 {
-    //_numberOfNeighbors[NodeA]--;
-    //_numberOfNeighbors[NodeB]--;
-
-    //cout<<NodeA<<" "<<NodeB<<endl;
-    //cout<<"size "<<_allNodes[NodeB].Get_neighbors().size()<<endl;
-    //for(int p = 0; p<_allNodes[NodeB].Get_neighbors().size();p++)
-    //{
-    //    cout<<_allNodes[NodeB].Get_neighbors(p)<<",";
-   // }
-    //cout<<endl;
-    //_allNodes[NodeB].ClearRank(NodeA,false);
-
     bool flagAtoB, flagBtoA;
     flagAtoB = _IsDAG(NodeA,NodeB);
     flagBtoA = _IsDAG(NodeB,NodeA);
-
 
     /* some cases:
     1) only A to B valid,
@@ -739,9 +442,8 @@ void BN::_SelectDirection(int NodeA, int NodeB, DATA& data,double temper)
         {
             aRandomNumber = static_cast<double>( rand() ) / RAND_MAX;
         }
-        if(aRandomNumber <= probSampleAtoB )// which means we do accept A to B
+        if(aRandomNumber <= probSampleAtoB ) // which means we do accept A to B
         {
-//cout<<NodeA<<"->"<<NodeB<<endl;
             _allNodes[NodeB] = tempNode;
             Set_arc(NodeA,NodeB,false);
             _score = tempScore;
@@ -772,17 +474,16 @@ void BN::_SelectDirection(int NodeA, int NodeB, DATA& data,double temper)
         {
             aRandomNumber = static_cast<double>( rand() ) / RAND_MAX;
         }
-        if(aRandomNumber <= probSampleBtoA )// which means we do accept B to A
+        if(aRandomNumber <= probSampleBtoA ) // which means we do accept B to A
         {
-//cout<<NodeB<<"->"<<NodeA<<endl;
             _allNodes[NodeA] = tempNode;
             Set_arc(NodeB,NodeA,false);
             _score = tempScore;
         }
     }
-    else if( flagAtoB && flagBtoA ) //both are valid,
+    else if( flagAtoB && flagBtoA ) // both are valid,
     {
-        //A to B part
+        // A to B part
         double tempScoreAtoB = _score;
         NODE tempNodeAtoB = _allNodes[NodeB];
         tempScoreAtoB -= tempNodeAtoB.Get_scoreContribution();
@@ -790,7 +491,8 @@ void BN::_SelectDirection(int NodeA, int NodeB, DATA& data,double temper)
         tempNodeAtoB.UpdateCPD(data);
         tempNodeAtoB.UpdateBIC(data.Get_NumberOfObservations());
         tempScoreAtoB += tempNodeAtoB.Get_scoreContribution();
-        //B to A part
+        
+        // B to A part
         double tempScoreBtoA = _score;
         NODE tempNodeBtoA = _allNodes[NodeA];
         tempScoreBtoA -= tempNodeBtoA.Get_scoreContribution();
@@ -798,7 +500,8 @@ void BN::_SelectDirection(int NodeA, int NodeB, DATA& data,double temper)
         tempNodeBtoA.UpdateCPD(data);
         tempNodeBtoA.UpdateBIC(data.Get_NumberOfObservations());
         tempScoreBtoA += tempNodeBtoA.Get_scoreContribution();
-        //probabilities
+        
+        // probabilities
         double probSampleAtoB,probSampleBtoA;
         if(tempScoreAtoB > tempScoreBtoA && tempScoreAtoB >_score)
         {
@@ -815,24 +518,21 @@ void BN::_SelectDirection(int NodeA, int NodeB, DATA& data,double temper)
             probSampleAtoB = exp((tempScoreAtoB-_score)/(temper))/(1.0+exp((tempScoreAtoB-_score)/(temper))+exp((tempScoreBtoA-_score)/(temper)));
             probSampleBtoA = exp((tempScoreBtoA-_score)/(temper))/(1.0+exp((tempScoreAtoB-_score)/(temper))+exp((tempScoreBtoA-_score)/(temper)));
         }
- //       probSampleAtoB = exp((tempScoreAtoB-_score)/(temper))/(1.0+exp((tempScoreAtoB-_score)/(temper))+exp((tempScoreBtoA-_score)/(temper)));
- //       probSampleBtoA = exp((tempScoreBtoA-_score)/(temper))/(1.0+exp((tempScoreAtoB-_score)/(temper))+exp((tempScoreBtoA-_score)/(temper)));
-        //sample
+        
+        // sample
         double aRandomNumber = static_cast<double>(rand())/RAND_MAX;
         while(aRandomNumber >= 1.0)
         {
             aRandomNumber = static_cast<double>( rand() ) / RAND_MAX;
         }
-        if(aRandomNumber <= probSampleAtoB )// which means we do accept A to B
+        if(aRandomNumber <= probSampleAtoB ) // which means we do accept A to B
         {
-//cout<<NodeA<<"->"<<NodeB<<endl;
             _allNodes[NodeB] = tempNodeAtoB;
             Set_arc(NodeA,NodeB,false);
             _score = tempScoreAtoB;
         }
         else if(aRandomNumber <= probSampleAtoB+probSampleBtoA) // accept B to A
         {
-//cout<<NodeB<<"->"<<NodeA<<endl;
             _allNodes[NodeA] = tempNodeBtoA;
             Set_arc(NodeB,NodeA,false);
             _score = tempScoreBtoA;
@@ -842,8 +542,6 @@ void BN::_SelectDirection(int NodeA, int NodeB, DATA& data,double temper)
     {
         //dummy...
     }
-   // cout<<_score<<endl;
-
 }
 
 void BN::_TripletSelection(vector<int>& candidateNodes, DATA& data, double temper,bool isCompleteGraph)
@@ -862,13 +560,12 @@ void BN::_TripletSelection(vector<int>& candidateNodes, DATA& data, double tempe
     vector<bool> AddedAnyEdge;
     for(int i=0; i<3;i++)
     {
-//cout<<"original "<<candidateNodes[i]<<","<<_allNodes[candidateNodes[i]].Get_scoreContribution()<<endl;
         originalBIC += _allNodes[candidateNodes[i]].Get_scoreContribution();
         originalNodes[i] = _allNodes[candidateNodes[i]];
         tmpAddedEdge[i] = true;
 
     }
-//cout<<"oBIC: "<<originalBIC<<endl;
+
     if(isCompleteGraph)
     {
         MaxInd = 3;
@@ -898,7 +595,6 @@ void BN::_TripletSelection(vector<int>& candidateNodes, DATA& data, double tempe
         potentialBIC.reserve(9);
         probOfSampling.reserve(9);
         configurations.reserve(9);
-       // tmpConfigurations.reserve(2);
         AddedEdge.reserve(9);
         AddedAnyEdge.reserve(9);
         for(int i =0; i< 9;i++)
@@ -912,10 +608,8 @@ void BN::_TripletSelection(vector<int>& candidateNodes, DATA& data, double tempe
             AddedEdge.push_back(tmpAddedEdge);
         }
     }
-//    probOfSampling[0] = 1.0;//exp(0)
     potentialBIC[0] = originalBIC;
-    AddedAnyEdge.push_back(true);// for the original configuration.
-//    TotalProb += probOfSampling[0];
+    AddedAnyEdge.push_back(true); // for the original configuration.
     for(int i =1 ; i< pow(3,MaxInd);i++)
     {
         for(int j=0;j<MaxInd;j++)
@@ -923,9 +617,8 @@ void BN::_TripletSelection(vector<int>& candidateNodes, DATA& data, double tempe
             switch( configurations[i][j])
             {
                 case 0:
-                  //  AddedEdge[i][j] = true;
                     break;
-                case 1: //j -> j+1, fromNode= j%3, and toNode= (j+1)%3
+                case 1: // j -> j+1, fromNode= j%3, and toNode= (j+1)%3
                     if( candidates[i][j%3].Get_ancester().find(candidateNodes[(j+1)%3]) ==  candidates[i][j%3].Get_ancester().end() ) //if it is DAG
                     {
 
@@ -953,9 +646,7 @@ void BN::_TripletSelection(vector<int>& candidateNodes, DATA& data, double tempe
                 case 2: // j<- j+1, fromNode= (j+1)%3, and toNode= j%3
                     if( candidates[i][(j+1)%3].Get_ancester().find(candidateNodes[(j)%3]) ==  candidates[i][(j+1)%3].Get_ancester().end() ) //if it is DAG
                     {
-                        //AddedEdge[i][j] = true;
                         //update fromNode: descendent/ child, and if (j+2)%3 in ancester of fromNode add toNode to its descendents as well
-                        //candidates[i][(j+1)%3].UpdateChild(candidateNodes[(j)%3]);
                         candidates[i][(j+1)%3].UpdateDescendant(candidateNodes[(j)%3],candidates[i][(j)%3].Get_descendant() );
                         if(candidates[i][(j+1)%3].Get_ancester().find(candidateNodes[(j+2)%3]) !=  candidates[i][(j+1)%3].Get_ancester().end()) //(j+2)%3 is an ancester of j%3
                         {
@@ -979,7 +670,6 @@ void BN::_TripletSelection(vector<int>& candidateNodes, DATA& data, double tempe
                 cout<<"invalid type of connections, and you should not see this message unless there is something wrong."<<endl;
                 break;
             }
-//cout<<"add or not:"<<AddedEdge[i][0]<<","<<AddedEdge[i][1]<<","<<AddedEdge[i][2]<<endl;
         }
         AddedAnyEdge.push_back( (AddedEdge[i][0])||(AddedEdge[i][1])||(AddedEdge[i][2]) );
         if(AddedAnyEdge[i]) // If any edge added to current configuration then update all the candidate Nodes.
@@ -992,16 +682,13 @@ void BN::_TripletSelection(vector<int>& candidateNodes, DATA& data, double tempe
                 potentialBIC[i] += candidates[i][j].Get_scoreContribution();
 
             }
-//cout<<"pBIC: "<<i<<"th "<<potentialBIC[i]<<endl;
-//            probOfSampling[i] += exp( (potentialBIC[i]-originalBIC)/temper );
         }
         else
         {
-//            probOfSampling[i] = 0.0;
         }
-//        TotalProb += probOfSampling[i];
     }
-//find the largest bic.
+    
+    // find the largest bic.
     double MaxBIC = potentialBIC[0];
     for(int i=1; i<pow(3,MaxInd);i++)
     {
@@ -1010,6 +697,7 @@ void BN::_TripletSelection(vector<int>& candidateNodes, DATA& data, double tempe
             MaxBIC = potentialBIC[i];
         }
     }
+    
     for(int i=0; i<pow(3,MaxInd);i++)
     {
         if(AddedAnyEdge[i])
@@ -1027,7 +715,8 @@ void BN::_TripletSelection(vector<int>& candidateNodes, DATA& data, double tempe
     {
         probOfSampling[i] /= TotalProb;
     }
-//Sample a random number
+    
+    // Sample a random number
     double aRandomNumber = static_cast<double>( rand() ) / RAND_MAX;
     while(aRandomNumber > 1.0)
     {
@@ -1062,14 +751,12 @@ void BN::_TripletSelection(vector<int>& candidateNodes, DATA& data, double tempe
 
     _score += potentialBIC[SampledEdge];
 
-    //copy the nodes from temp to allnodes
+    // copy the nodes from temp to allnodes
     for(int j=0; j<3 ; j++)
     {
        // candidates[SampledEdge][j].Set_copyall(false);
         _allNodes[candidateNodes[j]].UpdateResult(candidates[SampledEdge][j]);
     }
-
-
 
     for(int j=0;j<MaxInd;j++)
         {
@@ -1078,18 +765,16 @@ void BN::_TripletSelection(vector<int>& candidateNodes, DATA& data, double tempe
                 case 0:
 
                     break;
-                case 1: //j -> j+1, fromNode= j%3, and toNode= (j+1)%3
+                case 1: // j -> j+1, fromNode= j%3, and toNode= (j+1)%3
                     if( _IsDAG(candidateNodes[j%3],candidateNodes[(j+1)%3]) ) //if it is DAG
                     {
                         Set_arc(candidateNodes[j%3],candidateNodes[(j+1)%3],true);
-                        //cout<<candidateNodes[j%3]+1<<"->"<<candidateNodes[(j+1)%3]+1<<endl;
                     }
                     break;
                 case 2: // j<- j+1, fromNode= (j+1)%3, and toNode= j%3
                     if(_IsDAG(candidateNodes[(j+1)%3],candidateNodes[(j)%3])) //if it is DAG
                     {
                         Set_arc(candidateNodes[(j+1)%3],candidateNodes[(j)%3],true);
-                        //cout<<candidateNodes[(j+1)%3]+1<<"->"<<candidateNodes[j%3]+1<<endl;
                     }
                     break;
                 default :
@@ -1099,7 +784,6 @@ void BN::_TripletSelection(vector<int>& candidateNodes, DATA& data, double tempe
         }
 
 }
-
 
 
 bool BN::_IsDAG(int fromNode, int toNode)
@@ -1130,7 +814,6 @@ vector<int> BN::_SearchNoneZero(vector<int>& target)
 }
 
 
-
 vector< int > BN::_MinOverOne(vector<int>& target)// The algorithm is linear search.
 {
 
@@ -1154,6 +837,7 @@ vector< int > BN::_MinOverOne(vector<int>& target)// The algorithm is linear sea
         }
 
     }
+
     // start the linear search.
     if(!index.empty())
     {
@@ -1176,7 +860,6 @@ vector< int > BN::_MinOverOne(vector<int>& target)// The algorithm is linear sea
         }
     }
     return index;
-
 }
 
 
@@ -1228,75 +911,8 @@ bool BN::_ExistArc(int fromNode,int toNode)
     bool edge = false;
 
     if(_allNodes[fromNode].Get_child().find(toNode)!=_allNodes[fromNode].Get_child().end())
-        //|| _allNodes[toNode].Get_child().find(fromNode)!=_allNodes[toNode].Get_child().end())
     {
         edge=true;
     }
     return edge;
 }
-
-/*void BN::_RecombAncester(int toNode)
-{
-    set<int> children_new,children_old;
-    children_new.insert(toNode);
-    children_old.insert(toNode);
-    set<int>::iterator toNodes;
-    while(!(children_new.empty()))
-    {
-        children_old = children_new;
-        children_new.clear();
-        for(toNodes = children_old.begin();toNodes != children_old.end();toNodes++)
-        {
-            if(!(_allNodes[*toNodes].Get_parent().empty()))
-            {
-                vector<int> tmpParent = _allNodes[*toNodes].Get_parent();
-                set<int> tmpAncester;
-                tmpAncester.insert(tmpParent.begin(),tmpParent.end());
-                for(int j=0;j<tmpParent.size();j++)
-                {
-                    tmpAncester.insert(_allNodes[ tmpParent[j] ].Get_ancester().begin(),_allNodes[ tmpParent[j] ].Get_ancester().end());
-                }
-                _allNodes[*toNodes].Set_ancester(tmpAncester);
-            }
-            if(!(_allNodes[*toNodes].Get_child().empty()))
-            {
-                children_new.insert(_allNodes[*toNodes].Get_child().begin(),_allNodes[*toNodes].Get_child().end());
-            }
-        }
-    }
-}
-
-void BN::_RecombDescedant(int fromNode)
-{
-    set<int> parent_new,parent_old;
-    parent_new.insert(fromNode);
-    parent_old.insert(fromNode);
-    set<int>::iterator fromNodes;
-    while(!(parent_new.empty()))
-    {
-        parent_old = parent_new;
-        parent_new.clear();
-        for(fromNodes = parent_old.begin();fromNodes != parent_old.end();fromNodes++)
-        {
-            if(!(_allNodes[*fromNodes].Get_child().empty()))
-            {
-                set<int> tmpChild = _allNodes[*fromNodes].Get_child();
-                set<int>::iterator ch;
-                set<int> tmpDescandants;
-                tmpDescandants.insert(tmpChild.begin(),tmpChild.end());
-                for(ch = tmpChild.begin();ch != tmpChild.end();ch++)
-                {
-                    tmpDescandants.insert(_allNodes[ *ch ].Get_descendant().begin(),_allNodes[ *ch ].Get_descendant().end());
-                }
-                _allNodes[*fromNodes].Set_descendant(tmpDescandants);
-            }
-            if(!(_allNodes[*fromNodes].Get_parent().empty()))
-            {
-                parent_new.insert(_allNodes[*fromNodes].Get_parent().begin(),_allNodes[*fromNodes].Get_parent().end());
-            }
-        }
-    }
-
-
-}
-*/

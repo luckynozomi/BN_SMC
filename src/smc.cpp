@@ -42,12 +42,6 @@ void SMC::Initialize(DATA& data, double cutoff,int chains)
 }
 
 
-
-// to be changed
-
-
-
-
 void SMC::Update(DATA& data, int numberOfIter, int numberOfChains,int NofCores, double temper,int depth)
 {
     omp_set_num_threads(NofCores);
@@ -59,31 +53,19 @@ void SMC::Update(DATA& data, int numberOfIter, int numberOfChains,int NofCores, 
         BN runBN;
 
         runBN = _initBN;
-//        cout<<i<<"th chain,dependency for node 1: "<<runBN.Get_dependencies(0)<<endl;
-//        cout<<i<<"th chain,score contribution for node 20: "<<runBN.Get_aNode(19).Get_scoreContribution()<<endl;
-//        cout<<i<<"th chain,# of edges: "<<runBN.Get_edges().size()<<endl;
         int k = 0;
-        //int k=numberOfIter-1;
-//cout<<"i "<<i<<endl;
-
         while( (k < numberOfIter) && (runBN.Get_growing()) )
         {
 
             k++;
             runBN.Update(data,temper);
 
-   //         cout<<runBN.Get_score()<<endl;
-
             if(runBN.Get_score()>_bestBICs[i])
             {
                 _bestBICs[i] = runBN.Get_score();
-               // _bestBNs[i].Set_edges(runBN.Get_edges());
                 _bestBNs[i] = runBN;
             }
-
-  //      cout<<"-------------------------------------"<<endl;
         }
-
     }
     int round = 0;
     _bicScores.reserve(depth+1);
@@ -99,25 +81,14 @@ void SMC::Update(DATA& data, int numberOfIter, int numberOfChains,int NofCores, 
             _bestBICs[i] = _bestBNs[i].Get_score();
         }
         _bicScores.push_back(_bestBICs);
-  //      int max_ind = _MaximumIndSearch(_bestBICs);
- //debug using only
- //       _maxBicsRound.push_back(_bestBICs[max_ind]);
     }
 }
-
-
-
-
-
-//end
-
-
 
 
 void SMC::DFSummary(string outpath,int numberNodes)
 {
     ofstream DFresult;
-    DFresult.open((outpath+"_DFsummary.R").c_str());//,fstream::app);
+    DFresult.open((outpath+"_DFsummary.R").c_str());
     DFresult<<"DFcon<-list(NULL)"<<endl;
     for(int i=0; i<numberNodes;i++)
     {
@@ -127,21 +98,16 @@ void SMC::DFSummary(string outpath,int numberNodes)
             for(int j=0;j< _initBN.Get_aNode(i).Get_neighbors().size()-1 ;j++)
             {
                 DFresult<< _initBN.Get_aNode(i).Get_neighbors(j)+1<<",";
-                //DFresult<< _initBN.Get_aNode(i).Get_scoreOfNeighbors(j)<<",";
             }
             DFresult<< _initBN.Get_aNode(i).Get_neighbors(_initBN.Get_aNode(i).Get_neighbors().size()-1)+1;
-           // DFresult<< _initBN.Get_aNode(i).Get_scoreOfNeighbors(_initBN.Get_aNode(i).Get_neighbors().size()-1);
             DFresult<<")"<<endl;
         }
         else
         {
             continue;
         }
-
     }
-
     DFresult.close();
-
 }
 
 
@@ -149,6 +115,7 @@ void SMC::DFSummary(string outpath,int numberNodes)
 void SMC::Summary(string outpath,int chains,int nodes,int depth)
 {
     int max_ind = _MaximumIndSearch(_bestBICs);
+
     // compute the egdes ever sampled
     for(int i=0;i<chains;i++)
     {
@@ -156,8 +123,8 @@ void SMC::Summary(string outpath,int chains,int nodes,int depth)
         {
             _edgeMatrixSum[_bestBNs[i].Get_anEdge(j).Get_dLink().first][_bestBNs[i].Get_anEdge(j).Get_dLink().second]++;
         }
-
     }
+
     //compute the edsges sampled for the network with a BIC score inside first standard deviation.
     Statistics sta;
     sta.Summary(_bestBICs);
@@ -174,7 +141,7 @@ void SMC::Summary(string outpath,int chains,int nodes,int depth)
         }
     }
 
-//outputs
+    // outputs
     ofstream outFile,outFile_best,outFile_sum,outFile_scores,outFile_average;
     outFile.open((outpath+"_summary.txt").c_str(),fstream::app);
     outFile<<_bestBICs[max_ind]<<endl;
@@ -198,9 +165,6 @@ void SMC::Summary(string outpath,int chains,int nodes,int depth)
         outFile_scores<<_bicScores[j][chains-1]<<")"<<endl;
     }
     outFile_scores.close();
-
-
-
 
     outFile_best.open((outpath+"_best_edges.R").c_str());
     outFile_best<<"res.bn<-empty.graph(nam)"<<endl;
@@ -239,17 +203,9 @@ void SMC::Summary(string outpath,int chains,int nodes,int depth)
                 outFile_average<<i+1<<","<<j+1<<","<< static_cast<double>(_edgeMatrixAverage[i][j])/_averageCount <<endl;
             }
         }
-
     }
     outFile_average.close();
-
 }
-
-
-
-
-
-
 
 int SMC::_MaximumIndSearch(vector<double>& target)
 {

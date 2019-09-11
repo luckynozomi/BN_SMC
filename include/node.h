@@ -21,12 +21,14 @@ class NODE
 {
 public:
     NODE();
-   // NODE& operator=(const NODE &other);
+
     virtual ~NODE();
+
     string Get_nameOfNode() const
     {
         return _nameOfNode;
     }
+
     void Set_nameOfNode(string val)
     {
         _nameOfNode = val;
@@ -36,6 +38,7 @@ public:
     {
         return _nodeID;
     }
+
     void Set_nodeID(int val)
     {
         _nodeID = val;
@@ -45,10 +48,7 @@ public:
     {
         return _parent;
     }
-//    vector<int> Copy_parent() const
-//    {
-//        return _parent;
-//    }
+
     void Set_parent(vector<int>& val)
     {
         _parent = val;
@@ -58,14 +58,12 @@ public:
     {
         return _neighbors;
     }
+
     int Get_neighbors(int val)
     {
         return _neighbors[val];
     }
-//    vector<int> Copy_parent() const
-//    {
-//        return _parent;
-//    }
+
     void Set_neighbors(vector<int> val)
     {
         _neighbors= val;
@@ -75,6 +73,7 @@ public:
     {
         return _child;
     }
+
     void Set_child(set<int> val)
     {
         _child = val;
@@ -84,6 +83,7 @@ public:
     {
         return _ancester;
     }
+
     void Set_ancester(set<int> val)
     {
         _ancester = val;
@@ -93,6 +93,7 @@ public:
     {
         return _descendant;
     }
+
     void Set_descendant(set<int> val)
     {
         _descendant = val;
@@ -102,6 +103,7 @@ public:
     {
         return _probability;
     }
+
     void Set_probability(double val)
     {
         _probability = val;
@@ -111,6 +113,7 @@ public:
     {
         return _assignment;
     }
+
     void Set_Assignment(int val)
     {
         _assignment = val;
@@ -120,6 +123,7 @@ public:
     {
         return _scoreContribution;
     }
+
     void Set_scoreContribution(double val)
     {
         _scoreContribution = val;
@@ -129,6 +133,7 @@ public:
     {
         return _numberOfParameter;
     }
+
     void Set_numberOfParameter(int val)
     {
         _numberOfParameter = val;
@@ -138,6 +143,7 @@ public:
     {
         _possibleAssignment = val;
     }
+
     vector<string>& Get_possibleAssignment()
     {
         return _possibleAssignment;
@@ -157,74 +163,53 @@ public:
     {
         return _correspondingConstraint;
     }
+
     vector<double>& Get_scoreOfNeighbors()
     {
         return _scoreOfNeighbors;
     }
+
     double Get_scoreOfNeighbors(int ind)
     {
         return _scoreOfNeighbors[ind];
     }
-//    void Set_copyall(bool val)
-//    {
-//        _copyAll = val;
-//    }
-//    double Get_totalScore()
-//    {
-//        return _totalScore;
-//    }
+
     void InsertAncester(int node)
     {
         _ancester.insert(node);
     }
+
     void InsertDescendant(int node)
     {
         _descendant.insert(node);
     }
+
     // utility functions:
     void UpdateAncester(int, set<int>&);
     // @func UpdateAncester: update the ancester set of this node after add an arc.
     // @param int: the node id of the new parent of this node, so called the "fromNode".
     // @param set<int>: the ancester set of the "fromNode"
+
     void UpdateDescendant(int,set<int>&);
     // @func UpdateDescendant: update the Descendant set of this node after add an arc.
     // @param int: the node id of the new child of this node, so called the "toNode".
     // @param set<int>: the Descendant set of the "toNode"
+
     void UpdateParent( int );
     // @func UpdateParent: update the parent vector of this node
     // @param int: the new parent,so called "fromNode", id.
+
     void UpdateChild( int );
     // @func UpdateChild: update the child set of this node
     // @param int: the new child,socalled "toNode", id.
+
     void UpdateCPD(DATA& data)
     {
-/*    cout<<"descendants: ";
-    set<int>::iterator it;
-    for(it = _descendant.begin();it!= _descendant.end();it++)
-    {
-        cout<< *it <<",";
-    }
-    cout<<endl;
-    cout<<"parents: ";
-    for(int m=0; m<_parent.size();m++)
-    {
-        cout<<_parent[m]<<",";
-    }
-    cout<<endl;
-*/
         _correspondingCPD.UpdateCPD(_parent,data);
     }
 
     void UpdateBIC(int);
 
- /*   void UpdateScoreOfNeighbors()
-    {
-        for(unsigned i = 0; i<_neighbors.size();i++)
-        {
-            _scoreOfNeighbors.push_back(_correspondingConstraint.Get_testScore(_neighbors[i]));
-        }
-    }
-*/
     void ClearRank(int,bool);
 
     void CMIT(vector<NODE> &,DATA&,double);
@@ -236,8 +221,8 @@ public:
     void UpdateResult(NODE&);
 
     void RemoveParent(int);
+
     void RemoveChild(int);
- //   void Initialize();
 
 private:
     string _nameOfNode; // optional, the name of the node
@@ -246,20 +231,19 @@ private:
     CONSTRAINT _correspondingConstraint; // the contraints from MIT test.
     vector <int> _neighbors;
     vector <double> _scoreOfNeighbors;
-   // double _totalScore;
     vector<int> _parent; //records the id of the parent of this node
     set<int> _child; // record child id of this node
     set<int> _ancester; //record the ancester id of this node
     set<int> _descendant;// record the descendent id of this node
     double _scoreContribution; // The BIC score of this node.
     int _numberOfParameter; // number of categories(parameters) of this node, which in most cases is obtained from the node information(parameter) file.
+    
     // The following variables are used for inference only, they are not used in learning.
     double _probability; // this probability refer to the probability of a certain assignment used in inference.
     int _assignment; // the assignment of this node ontained from the inference
+    
     // the next variable is used to determine whether copy all information
-
     vector<string> _possibleAssignment; // optional, the names of each category.
-
 
     int _IndexSearch(int target);
     bool _CMIT(int,int,int,DATA&,double);
