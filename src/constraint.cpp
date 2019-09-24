@@ -25,6 +25,14 @@ void CONSTRAINT::MIT(DATA& data)
     {
         if(_correspondingNode!=i)
         {
+            int obs = 0;
+            for(int j=0; j < data.Get_NumberOfObservations(); ++j){
+                if(data.Get_data(j, i) != 0 && data.Get_data(j, _correspondingNode) != 0)
+                    obs += 1;
+            }
+
+            if(obs==0) continue; // If no observations in common, then we assume the nodes are independent
+
             int countTable[(param[i])][(param[_correspondingNode])];// construct the contingency table
             int coltotal[ (param[_correspondingNode] )];// column total(marginal)
             int rowtotal[ (param[i]) ];// row total(marginal)
@@ -40,11 +48,11 @@ void CONSTRAINT::MIT(DATA& data)
                 }
             }
 
-            int obs=data.Get_NumberOfObservations();
-            for(int j=0; j< obs; j++)
+            for(int j=0; j< data.Get_NumberOfObservations(); j++)
             {
-                countTable[ (data.Get_data(j,i)-1) ][ (data.Get_data(j,_correspondingNode)-1) ]++;
-                // count the observations into the contingency table.
+                if(data.Get_data(j, i) != 0 && data.Get_data(j, _correspondingNode) != 0)
+                    countTable[ (data.Get_data(j,i)-1) ][ (data.Get_data(j,_correspondingNode)-1) ]++;
+                    // count the observations into the contingency table.
             }
 
             // column total:

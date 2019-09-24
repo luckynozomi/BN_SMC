@@ -34,7 +34,7 @@ void BN::Initial(DATA& data, double cutoff)
         helpNode.Get_correspondingCPD().Set_correspondingNode(i);
         helpNode.Get_correspondingCPD().Set_numberOfParameter(data.Get_param(i));
         helpNode.UpdateCPD(data);
-        helpNode.UpdateBIC(data.Get_NumberOfObservations());
+        helpNode.UpdateBIC();
         helpNode.Get_correspondingConstraint().Set_correspondingNode(i);
 
         helpNode.Get_correspondingConstraint().Set_cutoff(cutoff);
@@ -386,7 +386,7 @@ void BN::HC(DATA& data)
                             NODE tmpNode = _allNodes[i];
                             tmpNode.UpdateParent(sequence[j]);
                             tmpNode.UpdateCPD(data);
-                            tmpNode.UpdateBIC(data.Get_NumberOfObservations());
+                            tmpNode.UpdateBIC();
                             if(tmpNode.Get_scoreContribution()>_allNodes[i].Get_scoreContribution())
                             {
                                 _score -= _allNodes[i].Get_scoreContribution();
@@ -426,7 +426,7 @@ void BN::_SelectDirection(int NodeA, int NodeB, DATA& data,double temper)
         tempScore -= tempNode.Get_scoreContribution();
         tempNode.UpdateParent(NodeA);
         tempNode.UpdateCPD(data);
-        tempNode.UpdateBIC(data.Get_NumberOfObservations());
+        tempNode.UpdateBIC();
         tempScore += tempNode.Get_scoreContribution();
         double probSampleAtoB = 0.0;
         if(tempScore > _score)
@@ -457,7 +457,7 @@ void BN::_SelectDirection(int NodeA, int NodeB, DATA& data,double temper)
         tempScore -= tempNode.Get_scoreContribution();
         tempNode.UpdateParent(NodeB);
         tempNode.UpdateCPD(data);
-        tempNode.UpdateBIC(data.Get_NumberOfObservations());
+        tempNode.UpdateBIC();
         tempScore += tempNode.Get_scoreContribution();
         double probSampleBtoA;
         if(tempScore > _score)
@@ -489,7 +489,7 @@ void BN::_SelectDirection(int NodeA, int NodeB, DATA& data,double temper)
         tempScoreAtoB -= tempNodeAtoB.Get_scoreContribution();
         tempNodeAtoB.UpdateParent(NodeA);
         tempNodeAtoB.UpdateCPD(data);
-        tempNodeAtoB.UpdateBIC(data.Get_NumberOfObservations());
+        tempNodeAtoB.UpdateBIC();
         tempScoreAtoB += tempNodeAtoB.Get_scoreContribution();
         
         // B to A part
@@ -498,7 +498,7 @@ void BN::_SelectDirection(int NodeA, int NodeB, DATA& data,double temper)
         tempScoreBtoA -= tempNodeBtoA.Get_scoreContribution();
         tempNodeBtoA.UpdateParent(NodeB);
         tempNodeBtoA.UpdateCPD(data);
-        tempNodeBtoA.UpdateBIC(data.Get_NumberOfObservations());
+        tempNodeBtoA.UpdateBIC();
         tempScoreBtoA += tempNodeBtoA.Get_scoreContribution();
         
         // probabilities
@@ -678,7 +678,7 @@ void BN::_TripletSelection(vector<int>& candidateNodes, DATA& data, double tempe
             {
 
                 candidates[i][j].UpdateCPD(data);
-                candidates[i][j].UpdateBIC(data.Get_NumberOfObservations());
+                candidates[i][j].UpdateBIC();
                 potentialBIC[i] += candidates[i][j].Get_scoreContribution();
 
             }

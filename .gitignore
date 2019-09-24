@@ -27,3 +27,6 @@
 *.out
 *.app
 data
+.vscode
+build
+*.py

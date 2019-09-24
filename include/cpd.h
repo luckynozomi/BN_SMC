@@ -91,7 +91,7 @@ public:
     //@param const DATA: the data
     //@param const vector<Node>: the vector of all nodes
 
-    void UpdateBIC(int);
+    void UpdateBIC();
 
 private:
     int _correspondingNode;// The corresponding node id.

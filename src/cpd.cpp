@@ -110,11 +110,12 @@ void CPD::UpdateCPD(const vector<int>& parent, DATA& data)
         // create the searching target which is one observation(incident) of the local strucutre.
         for(int j=0; j< temp_size; j++)
         {
-            // searchTarget.push_back(temp_data[i][ temp_par[j] ]);
             searchTarget[j] = data.Get_data(i, parent[j]);
         }
         searchTarget[temp_size] = data.Get_data(i, _correspondingNode);
-        _conditionCount[ _IndexSearchTarget(searchTarget,param) ]++; // set the count to be one more.
+        bool has_missing = (find(searchTarget.begin(), searchTarget.end(), 0) != searchTarget.end());
+        if(!has_missing)
+            _conditionCount[ _IndexSearchTarget(searchTarget,param) ]++; // set the count to be one more.
     }
 
     //calculate _probability
@@ -136,8 +137,12 @@ void CPD::UpdateCPD(const vector<int>& parent, DATA& data)
 
 }
 
-void CPD::UpdateBIC(int obs)
+void CPD::UpdateBIC()
 {
+    int obs = 0;
+    for(unsigned int i = 0; i< _conditionCount.size(); ++i) {
+        obs += _conditionCount[i];
+    }
     _BIC = - 0.5*_numberOfParentConfigure*(_numberOfParameter-1)*log( 1.0e-12+obs );
     for(unsigned int i = 0; i< _probability.size(); i++)
     {

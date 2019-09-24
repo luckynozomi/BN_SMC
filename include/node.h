@@ -208,7 +208,7 @@ public:
         _correspondingCPD.UpdateCPD(_parent,data);
     }
 
-    void UpdateBIC(int);
+    void UpdateBIC();
 
     void ClearRank(int,bool);
 

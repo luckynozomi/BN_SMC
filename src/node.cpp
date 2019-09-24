@@ -38,9 +38,9 @@ void NODE::UpdateChild(int toNode) //similar as update parent.
     _child.insert( toNode );
 }
 
-void NODE::UpdateBIC(int obs)
+void NODE::UpdateBIC()
 {
-    _correspondingCPD.UpdateBIC(obs);
+    _correspondingCPD.UpdateBIC();
     _scoreContribution = _correspondingCPD.Get_BIC();
 
 }
@@ -182,6 +182,8 @@ void NODE::RemoveChild(int val)
 
 }
 
+// Conditional MIT test of nodeA & nodeB, given nodeC.
+// Return true if dependent (pValue < cutoff)
 bool NODE::_CMIT(int nodeA, int nodeB, int nodeC, DATA& data,double cutoff)
 {
     int countTable[data.Get_param(nodeC)][data.Get_param(nodeB)  ][data.Get_param(nodeA)];
@@ -204,10 +206,19 @@ bool NODE::_CMIT(int nodeA, int nodeB, int nodeC, DATA& data,double cutoff)
         }
     }
 
+    int obs = 0;
+    for(int j=0; j < data.Get_NumberOfObservations(); ++j){
+        if(data.Get_data(j, nodeA) != 0 && data.Get_data(j, nodeB) != 0 && data.Get_data(j, nodeC) != 0)
+            obs += 1;
+    }
+
+    if(obs==0) return false; // Return independent if no data in common
+
     // Fill out the countTable
     for(int row=0; row<data.Get_NumberOfObservations(); row++)
-    {
-        countTable[ (data.Get_data(row,nodeC)-1) ][ (data.Get_data(row,nodeB)-1) ][ (data.Get_data(row,nodeA)-1) ]++;
+    {        
+        if(data.Get_data(row, nodeA) != 0 && data.Get_data(row, nodeB) != 0 && data.Get_data(row, nodeC) != 0)
+            countTable[ (data.Get_data(row,nodeC)-1) ][ (data.Get_data(row,nodeB)-1) ][ (data.Get_data(row,nodeA)-1) ]++;
     }
 
     // marginalization:
