@@ -47,6 +47,9 @@ int main(int argc, char* argv[])
     // path to the output file.
     string OUTPUT_FILE = argv[11];
 
+    // path to the prior file
+    char* PRIOR_NAME = argv[12];
+
     // First get the number of cores in current system
     int iCPU = omp_get_num_procs();
 
@@ -60,6 +63,7 @@ int main(int argc, char* argv[])
     DATA data1(OBSERVATIONS,NODES);
     data1.ReadData(DATA_NAME);
     data1.ReadParam(PARA_RANGE);
+    data1.ReadPrior(PRIOR_NAME);
     TEMPERATURE*=OBSERVATIONS;
 
     time(&iniStart);

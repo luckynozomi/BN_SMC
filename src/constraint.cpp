@@ -1,4 +1,5 @@
 #include "constraint.h"
+#include "utils.h"
 
 CONSTRAINT::CONSTRAINT()
 {
@@ -86,6 +87,16 @@ void CONSTRAINT::MIT(DATA& data)
 
             // define a chi-square test with degree of freedom (a-1)(b-1) where a is number of categories of the tested node and b number of categories of the corresponding node.
             double pValue = cdf( complement( thedist, mi ) );
+            if(data.Exists_prior(i, _correspondingNode) || data.Exists_prior(_correspondingNode, i)) 
+            {
+                vector<double> pvals;
+                pvals.push_back(pValue);
+                if(data.Exists_prior(i, _correspondingNode))
+                    pvals.push_back(data.Get_prior_pval(i, _correspondingNode));
+                if(data.Exists_prior(_correspondingNode, i))
+                    pvals.push_back(data.Get_prior_pval(_correspondingNode, i));
+                pValue = combine_pval(pvals);
+            }
             _testScore.push_back(1.0-pValue);
             if(pValue < _cutoff)// if the p-value is smaller than the cutoff, then the tested node is dependent with the corresponding node.
             {

@@ -1,4 +1,5 @@
 #include "node.h"
+#include "utils.h"
 
 NODE::NODE()
 {
@@ -38,9 +39,9 @@ void NODE::UpdateChild(int toNode) //similar as update parent.
     _child.insert( toNode );
 }
 
-void NODE::UpdateBIC()
+void NODE::UpdateBIC(DATA& data)
 {
-    _correspondingCPD.UpdateBIC();
+    _correspondingCPD.UpdateBIC(_parent, data);
     _scoreContribution = _correspondingCPD.Get_BIC();
 
 }
@@ -262,6 +263,15 @@ bool NODE::_CMIT(int nodeA, int nodeB, int nodeC, DATA& data,double cutoff)
 
     boost::math::chi_squared thedist( (data.Get_param(nodeA)-1)*(data.Get_param(nodeB)-1)*(data.Get_param(nodeC)) );
     double pValue = cdf( complement( thedist, cmi ) );
+    if(data.Exists_prior(nodeA, nodeB) || data.Exists_prior(nodeB, nodeA)){
+        vector<double> pvals;
+        pvals.push_back(pValue);
+        if(data.Exists_prior(nodeA, nodeB))
+            pvals.push_back(data.Get_prior_pval(nodeA, nodeB));
+        if(data.Exists_prior(nodeB, nodeA))
+            pvals.push_back(data.Get_prior_pval(nodeB, nodeA));
+        pValue = combine_pval(pvals);
+    }
     if(pValue<cutoff)
     {
         return true;

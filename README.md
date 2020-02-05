@@ -42,6 +42,7 @@ Input parameters:
 * `DATA_path`: the path to the data file (please include the full file name)
 * `PARAM_path`: the path to the param file (please include the full file name)
 * `output_path`: the prefix of output files
+* `PRIOR_path`: the path to the prior information file (please include the full file name)
 
 # Data
 The data file is a csv file, each row is one observation, while each column is a variable (node).
@@ -98,4 +99,14 @@ Sample file:
 3
 3
 3
+```
+
+# Prior file
+this is a csv file with four columns in each row. Each row represents a prior information: from_node, to_node, p_val, probability. The nodes are represented by integers starting from 1. 
+
+Sample file:
+
+```
+1, 3, 0.05, 0.95
+2, 4, 0.1, 0.99
 ```

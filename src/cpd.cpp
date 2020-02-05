@@ -137,7 +137,7 @@ void CPD::UpdateCPD(const vector<int>& parent, DATA& data)
 
 }
 
-void CPD::UpdateBIC()
+void CPD::UpdateBIC(const vector<int>& parent, DATA& data)
 {
     int obs = 0;
     for(unsigned int i = 0; i< _conditionCount.size(); ++i) {
@@ -147,5 +147,18 @@ void CPD::UpdateBIC()
     for(unsigned int i = 0; i< _probability.size(); i++)
     {
         _BIC += _conditionCount[i]*log(_probability[i]);
+    }
+    if(data.Exists_prior()) {
+        double log_prior = 0.0, this_log_prior = 0.0;
+        for(int j=0; j!=parent.size(); ++j){
+            if(data.Exists_prior(j, _correspondingNode)){
+                this_log_prior =  data.Get_prior_prob(j, _correspondingNode);
+            } else if (data.Exists_prior(_correspondingNode, j)) {
+                this_log_prior = (1 - data.Get_prior_prob(_correspondingNode, j)) / 2.0;
+            }
+            log_prior += this_log_prior;
+            this_log_prior = 0.0;
+        }
+        _BIC += log_prior;
     }
 }
