@@ -49,7 +49,6 @@ void SMC::Update(DATA& data, int numberOfIter, int numberOfChains,int NofCores, 
     for(int i=0;i<numberOfChains;i++)
     {
 
-        srand(i);
         BN runBN;
 
         runBN = _initBN;

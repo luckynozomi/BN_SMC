@@ -2,6 +2,8 @@
 
 int main(int argc, char* argv[])
 {
+    // Set random seed
+    srand(time(NULL));
     //read in the command line argument
     if (argc < 11)
     {
