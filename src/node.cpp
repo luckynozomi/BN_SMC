@@ -114,7 +114,7 @@ void NODE::CMIT(vector<NODE>& allnodes, DATA& data,double cutoff)
         if(tmpNeighbor[i]!=-1)
         {
             _neighbors.push_back(tmpNeighbor[i]);
-            _scoreOfNeighbors.push_back(_correspondingConstraint.Get_testScore(tmpNeighbor[i]));
+            _scoreOfNeighbors.push_back(_correspondingConstraint.Get_orderedTestScore(i));
         }
         else
         {
