@@ -647,6 +647,7 @@ void BN::_TripletSelection(vector<int>& candidateNodes, DATA& data, double tempe
                     if( candidates[i][(j+1)%3].Get_ancester().find(candidateNodes[(j)%3]) ==  candidates[i][(j+1)%3].Get_ancester().end() ) //if it is DAG
                     {
                         //update fromNode: descendent/ child, and if (j+2)%3 in ancester of fromNode add toNode to its descendents as well
+                        candidates[i][j%3].UpdateChild(candidateNodes[(j+1)%3]);
                         candidates[i][(j+1)%3].UpdateDescendant(candidateNodes[(j)%3],candidates[i][(j)%3].Get_descendant() );
                         if(candidates[i][(j+1)%3].Get_ancester().find(candidateNodes[(j+2)%3]) !=  candidates[i][(j+1)%3].Get_ancester().end()) //(j+2)%3 is an ancester of j%3
                         {
