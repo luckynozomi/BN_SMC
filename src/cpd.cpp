@@ -137,8 +137,36 @@ void CPD::UpdateCPD(const vector<int>& parent, DATA& data)
 
 }
 
-void CPD::UpdateBIC(const vector<int>& parent, DATA& data)
+double CPD::Get_Prior_Loglikelihood(const vector<int>& parent, const set<int>& child, DATA& data)
 {
+    double prior_likelihood = 0;
+    if(data.Exists_prior()) {
+        double this_log_prior = 0.0;
+        for(int node_idx=0; node_idx!=data.Get_NumberOfNodes(); ++node_idx){
+            if(data.Exists_prior(_correspondingNode, node_idx)){
+                if(find(child.begin(), child.end(), node_idx) != child.end()){
+                    this_log_prior = log(data.Get_prior_prob(_correspondingNode, node_idx) * 3);
+                } else {
+                    this_log_prior = log( (1 - data.Get_prior_prob(_correspondingNode, node_idx)) / 2.0 * 3);
+                }
+                prior_likelihood += this_log_prior;
+            } else if(data.Exists_prior(node_idx, _correspondingNode)) {
+                if(find(parent.begin(), parent.end(), node_idx) != parent.end()) {
+                    this_log_prior = log(data.Get_prior_prob(node_idx, _correspondingNode) * 3);
+                } else {
+                    this_log_prior = log( (1 - data.Get_prior_prob(node_idx, _correspondingNode)) / 2.0 * 3);
+                }
+                prior_likelihood += this_log_prior;
+            }
+            this_log_prior = 0;
+        }
+    }
+    return  prior_likelihood;
+}
+
+vector<double> CPD::UpdateBIC(const vector<int>& parent, const set<int>& child, DATA& data)
+{
+    vector<double> ret = {};    // a vector of: prior log-likelihood, data log-likelihood and posterior log-likelihood
     int obs = 0;
     for(unsigned int i = 0; i< _conditionCount.size(); ++i) {
         obs += _conditionCount[i];
@@ -148,17 +176,10 @@ void CPD::UpdateBIC(const vector<int>& parent, DATA& data)
     {
         _BIC += _conditionCount[i]*log(_probability[i]);
     }
-    if(data.Exists_prior()) {
-        double log_prior = 0.0, this_log_prior = 0.0;
-        for(int j=0; j!=parent.size(); ++j){
-            if(data.Exists_prior(j, _correspondingNode)){
-                this_log_prior =  data.Get_prior_prob(j, _correspondingNode);
-            } else if (data.Exists_prior(_correspondingNode, j)) {
-                this_log_prior = (1 - data.Get_prior_prob(_correspondingNode, j)) / 2.0;
-            }
-            log_prior += this_log_prior;
-            this_log_prior = 0.0;
-        }
-        _BIC += log_prior;
-    }
+    ret.push_back(_BIC);
+    double prior_loglikelihood = Get_Prior_Loglikelihood(parent, child, data);
+    _BIC += prior_loglikelihood;
+    ret.push_back(prior_loglikelihood);
+    ret.push_back(_BIC);
+    return ret;
 }

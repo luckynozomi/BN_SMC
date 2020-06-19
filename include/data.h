@@ -90,6 +90,13 @@ public:
         return _hasPrior;
     }
 
+    string Get_node_name(int node_idx)
+    {
+        return _name[node_idx];
+    }
+
+    int Get_node_index(string node_name);
+
     // Utility function:
     void ReadData(const char*);
     // @func ReadCSV: read a csv file into _data
@@ -104,6 +111,7 @@ private:
     bool _hasPrior; // true if there is prior
     vector < vector < int > > _data; // vector that stores the data for further use.
     vector<int> _param; // Numbers of parameters for each node.
+    vector<string> _name; // Name of the nodes.
     vector< vector<double> > _prior_prob; // Prior knowledge of the data.
     vector< vector<double> > _prior_pval; // Prior knowledge of the data.
 };

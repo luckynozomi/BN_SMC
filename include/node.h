@@ -208,13 +208,13 @@ public:
         _correspondingCPD.UpdateCPD(_parent,data);
     }
 
-    void UpdateBIC(DATA& data);
+    vector<double> UpdateBIC(DATA& data);
 
     void ClearRank(int,bool);
 
-    void CMIT(vector<NODE> &,DATA&,double);
+    void CMIT(vector<NODE> &,DATA&,double, ofstream&);
 
-    void SymmetryCorrection(vector<NODE>&);
+    void SymmetryCorrection(vector<NODE>&, DATA&);
 
     void SortNeighbor();
 
@@ -246,7 +246,7 @@ private:
     vector<string> _possibleAssignment; // optional, the names of each category.
 
     int _IndexSearch(int target);
-    bool _CMIT(int,int,int,DATA&,double);
+    bool _CMIT(int,int,int,DATA&,double,ofstream&);
     int _IndexBiSearch(int target);
     };
 

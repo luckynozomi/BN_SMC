@@ -39,11 +39,12 @@ void NODE::UpdateChild(int toNode) //similar as update parent.
     _child.insert( toNode );
 }
 
-void NODE::UpdateBIC(DATA& data)
+vector<double> NODE::UpdateBIC(DATA& data)
 {
-    _correspondingCPD.UpdateBIC(_parent, data);
+    // ret is a vector of: prior log-likelihood, data log-likelihood and posterior log-likelihood
+    vector<double> ret = _correspondingCPD.UpdateBIC(_parent, _child, data);
     _scoreContribution = _correspondingCPD.Get_BIC();
-
+    return ret;
 }
 void NODE::ClearRank(int idOrPos,bool ifdirect)
 {
@@ -60,9 +61,10 @@ void NODE::ClearRank(int idOrPos,bool ifdirect)
     }
 }
 
-void NODE::CMIT(vector<NODE>& allnodes, DATA& data,double cutoff)
+void NODE::CMIT(vector<NODE>& allnodes, DATA& data,double cutoff, ofstream& cmitfile)
 {
     vector<int> tmpNeighbor = _neighbors;
+    vector<int> orig_tmpNeighbor = _neighbors;
     for(int i=0; i<tmpNeighbor.size();i++)
     {
         if(tmpNeighbor[i]!=-1) // tmpNeighbor[i] is going to be conditioned on.
@@ -81,7 +83,7 @@ void NODE::CMIT(vector<NODE>& allnodes, DATA& data,double cutoff)
             {
                 for(int j=0;j<intNeighbor.size();j++)
                 {
-                    if(intNeighbor[j]!=-1&& !(_CMIT(_nodeID,intNeighbor[j],tmpNeighbor[i],data,cutoff)) )
+                    if(intNeighbor[j]!=-1&& !(_CMIT(_nodeID,intNeighbor[j],tmpNeighbor[i],data,cutoff, cmitfile)) )
                     {
                         for(int k=0; k<tmpNeighbor.size();k++)
                         {
@@ -117,14 +119,10 @@ void NODE::CMIT(vector<NODE>& allnodes, DATA& data,double cutoff)
             _neighbors.push_back(tmpNeighbor[i]);
             _scoreOfNeighbors.push_back(_correspondingConstraint.Get_orderedTestScore(i));
         }
-        else
-        {
-            continue;
-        }
     }
 }
 
-void NODE::SymmetryCorrection(vector<NODE>& allnodes)
+void NODE::SymmetryCorrection(vector<NODE>& allnodes, DATA& data)
 {
 
     for(int i = _neighbors.size()-1; i>=0;i--)
@@ -185,7 +183,7 @@ void NODE::RemoveChild(int val)
 
 // Conditional MIT test of nodeA & nodeB, given nodeC.
 // Return true if dependent (pValue < cutoff)
-bool NODE::_CMIT(int nodeA, int nodeB, int nodeC, DATA& data,double cutoff)
+bool NODE::_CMIT(int nodeA, int nodeB, int nodeC, DATA& data,double cutoff, ofstream& cmitfile)
 {
     int countTable[data.Get_param(nodeC)][data.Get_param(nodeB)  ][data.Get_param(nodeA)];
     int p_xz[ data.Get_param(nodeC) ][ data.Get_param(nodeA)];
@@ -262,16 +260,22 @@ bool NODE::_CMIT(int nodeA, int nodeB, int nodeC, DATA& data,double cutoff)
     }
 
     boost::math::chi_squared thedist( (data.Get_param(nodeA)-1)*(data.Get_param(nodeB)-1)*(data.Get_param(nodeC)) );
-    double pValue = cdf( complement( thedist, cmi ) );
+    double data_pvalue = cdf( complement( thedist, cmi ) );
+    double pValue = data_pvalue;
+    double prior_pvalue = 0;
     if(data.Exists_prior(nodeA, nodeB) || data.Exists_prior(nodeB, nodeA)){
         vector<double> pvals;
-        pvals.push_back(pValue);
+        pvals.push_back(data_pvalue);
         if(data.Exists_prior(nodeA, nodeB))
             pvals.push_back(data.Get_prior_pval(nodeA, nodeB));
         if(data.Exists_prior(nodeB, nodeA))
             pvals.push_back(data.Get_prior_pval(nodeB, nodeA));
         pValue = combine_pval(pvals);
+        prior_pvalue = pvals[1];
     }
+
+    cmitfile << data.Get_node_name(nodeA) << "," << data.Get_node_name(nodeB) << "," << data.Get_node_name(nodeC) << "," << prior_pvalue << "," << data_pvalue << "," << pValue << "," << (pValue < cutoff) << endl;
+
     if(pValue<cutoff)
     {
         return true;

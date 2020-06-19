@@ -5,6 +5,7 @@
 #include <set>
 #include <stdlib.h>
 #include <boost/tokenizer.hpp>
+#include <boost/filesystem.hpp>
 #include <math.h>
 #include <boost/math/distributions/chi_squared.hpp>
 #include <omp.h>

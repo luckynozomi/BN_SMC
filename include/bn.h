@@ -74,6 +74,16 @@ public:
         return _edges[id];
     }
 
+    int Get_randSeed()
+    {
+        return _RandSeed;
+    }
+
+    void Set_randSeed(int seed)
+    {
+        _RandSeed = seed;
+    }
+
     void Set_edges(vector < EDGE >& val)
     {
         _edges = val;
@@ -99,6 +109,14 @@ public:
         return _numberOfNeighbors[id];
     }
 
+    void Set_name(string name){
+        _name = name;
+    }
+
+    string Get_name(){
+        return _name;
+    }
+
     // utility functions:
     void Initial(DATA&,double);
 
@@ -111,7 +129,7 @@ public:
     // BICscore: Used to initialize score.
     //void UpdateScore(const vector<CPD>&, int, int);
 
-    void Update(DATA&,double);
+    void Update(DATA&,double, ostream&);
     // Update: smc updating
     // @DATA&: the data object
     // @double: temperature
@@ -120,7 +138,10 @@ public:
     // HC: hill climbing to ensure reaching the local optimal
     // @DATA&: data object
 
+    string Write_Bnlearn_modelstring(DATA&);
+
 private:
+    string _name;
     double _score; // BIC score
     vector<NODE> _allNodes;
     vector<int> _dependencies;
@@ -128,6 +149,7 @@ private:
     vector < EDGE > _edges;
     bool _growing;
     bool _oneNeb;
+    int _RandSeed;
 
     // Some parameters that should not be accessed from outside
     // this chunk of paramters are used when there is no more nodes with more than one neighbor
@@ -139,8 +161,8 @@ private:
     vector<int> _SearchNoneZero(vector<int>&);
     vector< int > _MinOverOne(vector<int>&);
     double _Summation(vector<double>&);// linear addition.
-    void _SelectDirection(int,int,DATA&,double);
-    void _TripletSelection(vector<int>&,DATA&,double,bool);
+    void _SelectDirection(int,int,DATA&,double,ostream&);
+    void _TripletSelection(vector<int>&,DATA&,double,bool,ostream&);
     int _IndexSearch(int);
     bool _ExistArc(int,int);
     vector<bool> _changedAcc;

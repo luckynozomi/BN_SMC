@@ -18,7 +18,7 @@ CONSTRAINT::~CONSTRAINT()
     //dtor
 }
 
-void CONSTRAINT::MIT(DATA& data)
+void CONSTRAINT::MIT(DATA& data, ofstream& mitfile)
 {
     // Mutual information test for the discretized data is essentially Pearson's Chi-square test
     vector < int > & param = data.Get_param();
@@ -84,19 +84,29 @@ void CONSTRAINT::MIT(DATA& data)
                 }
             }
             boost::math::chi_squared thedist( (param[i]-1)*(param[_correspondingNode]-1) );
-
             // define a chi-square test with degree of freedom (a-1)(b-1) where a is number of categories of the tested node and b number of categories of the corresponding node.
             double pValue = cdf( complement( thedist, mi ) );
+            double data_pValue = pValue;
+            double prior_pValue = 0;
+            double posterior_pValue = 0;
+            bool exists_prior = false;
             if(data.Exists_prior(i, _correspondingNode) || data.Exists_prior(_correspondingNode, i)) 
             {
+                exists_prior = true;
                 vector<double> pvals;
                 pvals.push_back(pValue);
-                if(data.Exists_prior(i, _correspondingNode))
+                if(data.Exists_prior(i, _correspondingNode)){
                     pvals.push_back(data.Get_prior_pval(i, _correspondingNode));
-                if(data.Exists_prior(_correspondingNode, i))
+                    prior_pValue = data.Get_prior_pval(i, _correspondingNode);
+                }
+                if(data.Exists_prior(_correspondingNode, i)){
                     pvals.push_back(data.Get_prior_pval(_correspondingNode, i));
+                    prior_pValue = data.Get_prior_pval(_correspondingNode, i);
+                }
                 pValue = combine_pval(pvals);
             }
+            posterior_pValue = pValue;
+            mitfile << data.Get_node_name(i) << "," << data.Get_node_name(_correspondingNode) << "," << prior_pValue << "," << data_pValue << "," << posterior_pValue << "," << 1.0-pValue << "," << (pValue<_cutoff) << endl;
             _testScore.push_back(1.0-pValue);
             if(pValue < _cutoff)// if the p-value is smaller than the cutoff, then the tested node is dependent with the corresponding node.
             {

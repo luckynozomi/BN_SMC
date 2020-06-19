@@ -32,6 +32,7 @@ SMC::SMC(int nodes,int chains)
 
 void SMC::Initialize(DATA& data, double cutoff,int chains)
 {
+    _initBN.Set_name(_name);
     _initBN.Initial(data,cutoff);
 
     for(int i=0;i<chains;i++)
@@ -42,7 +43,7 @@ void SMC::Initialize(DATA& data, double cutoff,int chains)
 }
 
 
-void SMC::Update(DATA& data, int numberOfIter, int numberOfChains,int NofCores, double temper,int depth)
+void SMC::Update(DATA& data, int numberOfIter, int numberOfChains,int NofCores, double temper,int depth, vector<int> rand_seeds)
 {
     omp_set_num_threads(NofCores);
 #pragma omp parallel for// parallel computing using OPENMP
@@ -50,14 +51,25 @@ void SMC::Update(DATA& data, int numberOfIter, int numberOfChains,int NofCores, 
     {
 
         BN runBN;
-
+        srand(rand_seeds[i]);
+        runBN.Set_randSeed(rand_seeds[i]);
         runBN = _initBN;
         int k = 0;
+        int last_edge_idx = -1;
+        ofstream log_file;
+        log_file.open(_name + "/logs/" + to_string(rand_seeds[i]) + ".txt", ios::app);
+
         while( (k < numberOfIter) && (runBN.Get_growing()) )
         {
-
+            vector<EDGE> edges = runBN.Get_edges();
+            for(int edge_idx=last_edge_idx+1; edge_idx!=edges.size(); ++edge_idx){
+                log_file << "Added edge: "<< data.Get_node_name(edges[edge_idx].Get_dLink().first) << " --> " << data.Get_node_name(edges[edge_idx].Get_dLink().second) << endl;
+                int from_edge = edges[edge_idx].Get_dLink().first;
+                int to_edge = edges[edge_idx].Get_dLink().first;
+            }
+            last_edge_idx = edges.size() - 1;
             k++;
-            runBN.Update(data,temper);
+            runBN.Update(data,temper, log_file);
 
             if(runBN.Get_score()>_bestBICs[i])
             {
@@ -65,6 +77,7 @@ void SMC::Update(DATA& data, int numberOfIter, int numberOfChains,int NofCores, 
                 _bestBNs[i] = runBN;
             }
         }
+        log_file.close();
     }
     int round = 0;
     _bicScores.reserve(depth+1);
@@ -111,9 +124,38 @@ void SMC::DFSummary(string outpath,int numberNodes)
 
 
 
-void SMC::Summary(string outpath,int chains,int nodes,int depth)
+void SMC::Summary(string outpath,int chains,int nodes,int depth, DATA& data, vector<int> rand_seeds)
 {
     int max_ind = _MaximumIndSearch(_bestBICs);
+    double best_posterior = _bestBNs[max_ind].Get_score();
+    double eps = 1e-5;
+    ofstream summary_file;
+    double ll_prior = 0.0;
+    double ll_posterior = 0.0;
+    double ll_data = 0.0;
+    summary_file.open(outpath+"/summaries/bn.tsv");
+    summary_file << std::boolalpha;
+    summary_file << "best BN?\tindex\trand seed\tprior\tdata\tposterior\tmodel string" << endl;
+    for(int chain_idx=0; chain_idx!=chains; ++chain_idx){
+        BN& this_BN = _bestBNs[chain_idx];
+        for(int node_idx=0; node_idx!=nodes; ++node_idx){
+            NODE& this_node = this_BN.Get_aNode(node_idx);
+            //prior log-likelihood, data log-likelihood and posterior log-likelihood
+            vector<double> BICs = this_node.UpdateBIC(data);
+            ll_prior += BICs[0];
+            ll_data += BICs[1];
+            ll_posterior += BICs[2];
+        }
+        summary_file << (abs(best_posterior - ll_posterior) <= eps) << "\t";
+        summary_file << chain_idx << "\t" << setw(12) << rand_seeds[chain_idx] << "\t";
+        summary_file << setw(12) << ll_prior << "\t" << setw(12) << ll_data << "\t" <<  setw(12) << ll_posterior << "\t";
+        summary_file << this_BN.Write_Bnlearn_modelstring(data) << endl;
+        ll_data = 0;
+        ll_prior = 0;
+        ll_posterior = 0;
+    }
+    summary_file.close();
+
 
     // compute the egdes ever sampled
     for(int i=0;i<chains;i++)
@@ -142,7 +184,7 @@ void SMC::Summary(string outpath,int chains,int nodes,int depth)
 
     // outputs
     ofstream outFile,outFile_best,outFile_sum,outFile_scores,outFile_average;
-    outFile.open((outpath+"_summary.txt").c_str(),fstream::app);
+    outFile.open((outpath+"/summaries/summary.txt").c_str(),fstream::app);
     outFile<<_bestBICs[max_ind]<<endl;
     outFile<<_averageCount<<endl;
     for(int i=0;i<_maxBicsRound.size();i++)
@@ -152,7 +194,7 @@ void SMC::Summary(string outpath,int chains,int nodes,int depth)
     outFile<<endl;
     outFile.close();
 
-    outFile_scores.open((outpath+"_scores.R").c_str());
+    outFile_scores.open((outpath+"/summaries/scores.R").c_str());
     outFile_scores<<"scores<-NULL"<<endl;
     for(int j=0;j<=depth;j++)
     {
@@ -165,7 +207,7 @@ void SMC::Summary(string outpath,int chains,int nodes,int depth)
     }
     outFile_scores.close();
 
-    outFile_best.open((outpath+"_best_edges.R").c_str());
+    outFile_best.open((outpath+"/summaries/best_edges.R").c_str());
     outFile_best<<"res.bn<-empty.graph(nam)"<<endl;
     for(unsigned int i=0;i<_bestBNs[max_ind].Get_edges().size();i++)
     {
@@ -175,7 +217,12 @@ void SMC::Summary(string outpath,int chains,int nodes,int depth)
     }
     outFile_best.close();
 
-    outFile_sum.open((outpath+"_sum_edges.txt").c_str());
+    ofstream outFile_bestbn;
+    outFile_bestbn.open((outpath+"/summaries/best_BN.txt"));
+    outFile_bestbn << _bestBNs[max_ind].Write_Bnlearn_modelstring(data) << endl;
+    outFile_bestbn.close();
+
+    outFile_sum.open((outpath+"/summaries/sum_edges.txt").c_str());
 
     outFile_sum<<"From, To, Count"<<endl;
     for(int i = 0;i<nodes;i++)
@@ -191,7 +238,7 @@ void SMC::Summary(string outpath,int chains,int nodes,int depth)
     }
     outFile_sum.close();
 
-    outFile_average.open((outpath+"_average_edges.txt").c_str());
+    outFile_average.open((outpath+"/summaries/average_edges.txt").c_str());
     outFile_average<<"From, To, Count"<<endl;
     for(int i = 0;i<nodes;i++)
     {

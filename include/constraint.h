@@ -84,7 +84,7 @@ public:
     }
 
     //utility
-    void MIT(DATA&);
+    void MIT(DATA&, ofstream&);
     //@func MIT: mutual information test for dependency
     //@param DATA: the data set
     //@param int*: the information file, contains information about how many categories of the nodes.

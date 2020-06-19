@@ -21,6 +21,7 @@ DATA::DATA(int obs, int nodes)
     _NumberOfNodes = nodes;
     _NumberOfObservations = obs;
     _param.reserve(nodes);
+    _name.reserve(nodes);
     
     // Fill the _prior with -1 (acting as no default value for this nodes)
     for(int idx=0; idx < nodes; ++idx){
@@ -71,7 +72,10 @@ void DATA::ReadParam(const char* fileName)
 {
     ifstream inFile;
     inFile.open(fileName);
-    int helper;
+    int param;
+    typedef boost::tokenizer< boost::char_separator< char > > Tokenizer;
+    boost::char_separator< char > sep(",");
+    string line;
     if(inFile.fail())
     {
         cerr<< "unable to open the param file"<<endl;
@@ -79,10 +83,13 @@ void DATA::ReadParam(const char* fileName)
     }
     else
     {
-        for(int i=0; i<_NumberOfNodes; i++)
+        while( getline(inFile, line ))
         {
-            inFile>> helper;
-            _param.push_back(helper);
+            Tokenizer info(line, sep);
+            param = stoi(*(++info.begin()));
+            string name = *info.begin();
+            _param.push_back(param);
+            _name.push_back(name);
 
         }
     }
@@ -109,14 +116,24 @@ void DATA::ReadPrior(const char* fileName)
         {
             _hasPrior = true;
             Tokenizer info(line, sep);
-            int from_node = stoi(*(info.begin())) - 1;
-            int to_node = stoi( *(++info.begin()) ) - 1;
+            string from_node_name = *(info.begin());
+            int from_node = this->Get_node_index(from_node_name);
+            string to_node_name = *(++info.begin());
+            int to_node = this->Get_node_index(to_node_name);
             double p_val = stod( *(++(++info.begin())) );
             double prob = stod( *(++(++(++info.begin()))) );
-            cout << from_node << '\t' << to_node << '\t' << p_val << prob << endl;
             _prior_pval[from_node][to_node] = p_val;
             _prior_prob[from_node][to_node] = prob;
         }
     }
     inFile.close();
+}
+
+int DATA::Get_node_index(string node_name){
+    int ret = -1;
+    int num_obs = this->Get_NumberOfNodes();
+    for(ret=0; ret!=num_obs; ++ret){
+        if(this->Get_node_name(ret) == node_name) return ret;
+    }
+    return -1;
 }

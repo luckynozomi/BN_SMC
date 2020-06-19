@@ -91,8 +91,8 @@ public:
     //@param const DATA: the data
     //@param const vector<Node>: the vector of all nodes
 
-    void UpdateBIC(const vector<int>&, DATA&);
-
+    vector<double> UpdateBIC(const vector<int>&, const set<int>&, DATA&);
+    double Get_Prior_Loglikelihood(const vector<int>&, const set<int>&, DATA&);
 private:
     int _correspondingNode;// The corresponding node id.
     vector<int> _conditionCount;// count values of each case for the corresponding node

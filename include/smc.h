@@ -51,13 +51,22 @@ public:
 
     void Initialize(DATA&, double,int);
 
-    void Update(DATA&,int,int,int,double,int);
+    void Update(DATA&,int,int,int,double,int, vector<int>);
     
     void DFSummary(string,int);
     
-    void Summary(string,int,int,int);
+    void Summary(string,int,int,int, DATA&, vector<int>);
+
+    void Set_name(string name){
+        _name = name;
+    }
+
+    string Get_name(){
+        return _name;
+    }
 
 private:
+    string _name;
     BN _initBN;
     vector<BN> _bestBNs;
     vector<double> _bestBICs;

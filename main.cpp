@@ -2,12 +2,11 @@
 
 int main(int argc, char* argv[])
 {
-    // Set random seed
-    srand(time(NULL));
     //read in the command line argument
-    if (argc < 11)
+    if (argc < 13)
     {
-        cerr<<"Not enough input, the format should be:"<<argv[0]<< " #NODES #OBS #iter #chains cutoff #cores temperature depth DATA_path PARAM_path output_path"<<endl;
+        cerr<<"Not enough input, the format should be:"<<argv[0]<< " #NODES #OBS #iter #chains cutoff #cores temperature depth DATA_path PARAM_path output_path prior_path"<<endl;
+        return 1;
     }
     // Number of nodes (parameters) in the data
     string Node_temp = argv[1];
@@ -47,7 +46,7 @@ int main(int argc, char* argv[])
     char* PARA_RANGE = argv[10];
 
     // path to the output file.
-    string OUTPUT_FILE = argv[11];
+    string OUTPUT_DIR = argv[11];
 
     // path to the prior file
     char* PRIOR_NAME = argv[12];
@@ -62,6 +61,22 @@ int main(int argc, char* argv[])
     }
     time_t iniStart,iniEnd,procStart,procEnd;
 
+    // Set random seed
+    srand(time(NULL));
+    vector<int> rand_seeds;
+    for(int idx=0; idx!=NUMBER_OF_CHAIN; ++idx){
+        rand_seeds.push_back(rand());
+    }
+
+    namespace fs = boost::filesystem;
+    fs::path dstFolder = OUTPUT_DIR;
+    if(fs::exists(dstFolder)){
+        cout << "Directory " << dstFolder << " already exsists. Please specify another directory." << endl;
+        return 1;
+    }
+    fs::create_directory(dstFolder);
+    fs::create_directory(dstFolder / fs::path("logs"));
+    fs::create_directory(dstFolder / fs::path("summaries"));
     DATA data1(OBSERVATIONS,NODES);
     data1.ReadData(DATA_NAME);
     data1.ReadParam(PARA_RANGE);
@@ -70,19 +85,20 @@ int main(int argc, char* argv[])
 
     time(&iniStart);
     SMC smc1(NODES,NUMBER_OF_CHAIN);
+    smc1.Set_name(OUTPUT_DIR);
     smc1.Initialize(data1, CUT_OFF,NUMBER_OF_CHAIN);
-    smc1.DFSummary(OUTPUT_FILE,NODES);
+    smc1.DFSummary(OUTPUT_DIR,NODES);
     time(&iniEnd);
     time(&procStart);
-    smc1.Update(data1,NUMBER_OF_ITERATION,NUMBER_OF_CHAIN,NUMBER_OF_CORES,TEMPERATURE,DEPTH);
+    smc1.Update(data1,NUMBER_OF_ITERATION,NUMBER_OF_CHAIN,NUMBER_OF_CORES,TEMPERATURE,DEPTH, rand_seeds);
     time(&procEnd);
     ofstream outFile;
-    outFile.open((OUTPUT_FILE+"_summary.txt").c_str());
+    outFile.open((OUTPUT_DIR+"summaries/summary.txt").c_str());
     outFile<<"Elasped time for initialization is "<< difftime(iniEnd,iniStart)<<endl;
     outFile<< "Time elasped is "<< difftime(procEnd,procStart)<<endl;
     outFile.close();
 
-    smc1.Summary(OUTPUT_FILE,NUMBER_OF_CHAIN,NODES,DEPTH);
+    smc1.Summary(OUTPUT_DIR,NUMBER_OF_CHAIN,NODES,DEPTH,data1, rand_seeds);
 
     return 0;
 }
